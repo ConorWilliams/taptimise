@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from .classes import Tap, House
+
 
 def optimise(houses, num_taps, max_load, steps=None, debug=False, multiscale=True, max_dist=-1):
 

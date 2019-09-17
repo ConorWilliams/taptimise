@@ -6,6 +6,8 @@
 import argparse
 import csv
 import os
+import numpy as np
+from matplotlib import pyplot as plt
 
 from .__init__ import __version__
 from .optimise import optimise
@@ -72,6 +74,26 @@ def main():
 
         if args.disable_auto:
             break
+
+    # visulise here
+
+    # cmap = plt.cm.get_cmap('nipy_spectral', len(taps))
+
+    # h = np.asarray(houses)
+    # t = np.asarray(taps)
+
+    # plt.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=16)
+    # plt.plot(t[:, 2], t[:, 1], '+', color='k', markersize=8, label='Taps')
+    # plt.title("Optimised for " + str(len(taps)) + ' taps')
+    # plt.gca().set_aspect('equal')
+
+    # plt.axis(xmin=minLong, ymin=minLat, xmax=minLong +
+    #          length, ymax=minLat + length)
+
+    # plt.xlabel('Latitude')
+    # plt.ylabel('Longitude')
+
+    # plt.legend()
 
     print(houses)
 
