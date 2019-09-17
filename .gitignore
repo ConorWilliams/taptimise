@@ -1,3 +1,10 @@
+#Specific
+test/*.html
+test/*.png
+test/*.pdf
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
