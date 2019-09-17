@@ -1,0 +1,12 @@
+README.md
+setup.py
+taptimise/__init__.py
+taptimise/__main__.py
+taptimise/classes.py
+taptimise/optimise.py
+taptimise/taptimise.py
+taptimise.egg-info/PKG-INFO
+taptimise.egg-info/SOURCES.txt
+taptimise.egg-info/dependency_links.txt
+taptimise.egg-info/entry_points.txt
+taptimise.egg-info/top_level.txt

@@ -1,2 +1,2 @@
 # taptimise
-Second generation tap optimisation algorithim for the eWaterPay project
+Second generation tap optimisation algorithm for the eWaterPay project.
