@@ -120,32 +120,32 @@ def main():
 
     if args.debug:
 
-        data = np.asarray(run_data[0])
-        ind = np.arange(data.shape[0])    # the x locations for the groups
         width = 1       # the width of the bars: can also be len(x) sequence
 
-        fig, ax1 = plt.subplots()
+        fig, axis = plt.subplots(len(run_data))
 
         window = 11
 
-        color = 'tab:red'
-        ax1.set_xlabel('steps')
-        ax1.set_ylabel('energy', color=color)
-        ax1.plot(ind, smooth(data[::, 2], window))
-        ax1.plot(ind, smooth(data[::, 3] + data[::, 2], window))
-        ax1.plot(ind, smooth(data[::, 4] + data[::, 2] + data[::, 3], window))
-        ax1.tick_params(axis='y', labelcolor=color)
+        E0 = run_data[0][0][1]
 
-        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+        for ax, run in zip(axis, run_data):
 
-        color = 'tab:blue'
-        # we already handled the x-label with ax1
-        ax2.set_ylabel('decisions', color=color)
+            data = np.asarray(run)
+            ind = np.arange(data.shape[0])    # the x locations for the groups
 
-        ax2.tick_params(axis='y', labelcolor=color)
-        ax2.plot(ind, smooth(data[::, 1], window), color='k')
+            ax.set_xlabel('Monte-Carlo Steps')
+            ax.set_ylabel('Counters')
+            ax.plot(ind, smooth(data[::, 2], window))
+            ax.plot(ind, smooth(data[::, 3] + data[::, 2], window))
+            ax.plot(ind, smooth(data[::, 4] +
+                                data[::, 2] + data[::, 3], window))
 
-        fig.tight_layout()  # otherwise the right y-label is slightly clipped
+            ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
+
+            ax2.set_ylabel('Energy')
+            ax2.plot(ind, smooth(data[::, 1] / E0, window), color='k')
+
+            fig.tight_layout()  # otherwise the right y-label is slightly clipped
 
     for tap in taps:
         print(tap[3])

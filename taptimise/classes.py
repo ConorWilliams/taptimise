@@ -58,11 +58,8 @@ class Tap():
         if self.load > self.exp_load:
             self.energy *= (self.load / self.exp_load) ** OVERLOAD_EXPONENT
 
-        if self.load > self.max_load:
-            self.energy *= OVERLOAD_BASE ** (self.load / self.max_load - 1)
-
-        # var_like = ((self.load - self.exp_load)**2 / self.exp_load) + 1
-        # self.energy *= math.log(var_like) + 1
+        # if self.load > self.max_load:
+        #     self.energy *= OVERLOAD_BASE ** (self.load / self.max_load - 1)
 
         return self.energy - self.old_energy
 

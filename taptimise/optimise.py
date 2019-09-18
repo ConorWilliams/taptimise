@@ -6,8 +6,8 @@ from tqdm import trange
 
 from .classes import Tap, House
 
-BUFFER_MULTIPLYER = 5
-DEFAULT_NUM_SCALES = 2
+BUFFER_MULTIPLYER = 1
+DEFAULT_NUM_SCALES = 1
 STEP_MULTIPLYER = 100
 ZTC_MULTIPLYER = 2
 KB_AVERAGE_RUNS = 1000
@@ -17,9 +17,6 @@ LENGTH_SCALE_THRESHOLD = 0.5
 def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
              multiscale=True, max_dist=-1, buff_size=None):
     # finds optimal tap position for houses
-
-    print(max_load, num_taps, steps, debug, multiscale, max_dist, buff_size)
-
     tot_demand = sum(h[2] for h in houses)
 
     if num_taps is None:
@@ -45,7 +42,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     kB = 0
     for _ in range(KB_AVERAGE_RUNS):
         randomise(houses, taps)
-        kB += calac_kB(houses, taps)
+        kB += calc_kB(houses, taps)
 
     kB /= KB_AVERAGE_RUNS
 
@@ -60,6 +57,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     debug_data = []
     for _ in range(num_scales):
         run_info = cool(houses, taps, steps, kB, debug=debug)
+        kB = calc_kB(houses, taps)
         debug_data.append(run_info)
 
     # zero temp cooling
@@ -86,12 +84,8 @@ def cool(houses, taps, steps, kB, debug=False):
 
     data = []
 
-    base = 0.001**-1
-
     for i in trange(steps):
-        temp = (1 - i / steps)
-        #temp = base**(i / steps)
-
+        temp = (1 - i / steps) * 10
         random.shuffle(houses)
 
         if debug:
@@ -174,7 +168,7 @@ def get_grid(houses):
     return xmin, xmin + gap, ymin, ymin + gap
 
 
-def calac_kB(houses, taps):
+def calc_kB(houses, taps):
     # computes the expectation energy of current bonds
     energy = 0
     for tap in taps:
