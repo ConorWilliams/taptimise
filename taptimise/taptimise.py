@@ -19,6 +19,8 @@ def smooth(a, WSZ=WINDOW_SIZE):
     # a: NumPy 1-D array containing the data to be smoothed
     # WSZ: smoothing window size needs, which must be odd number,
     # as in the original MATLAB implementation
+    if len(a) < WSZ:
+        return a
     out0 = np.convolve(a, np.ones(WSZ, dtype=int), 'valid') / WSZ
     r = np.arange(1, WSZ - 1, 2)
     start = np.cumsum(a[:WSZ - 1])[::2] / r
@@ -49,7 +51,7 @@ def main():
     parser.add_argument('--num-scales', action='store', type=int,
                         help='set number of scales')
 
-    parser.add_argument('--disable-auto', action='store_false',
+    parser.add_argument('--disable-auto', action='store_true',
                         help='disables auto rerun if house too far')
 
     parser.add_argument('-d', '--debug', action='store_true',
@@ -68,19 +70,19 @@ def main():
     else:
         path = os.path.abspath(args.path)
 
-    houses = []
+    raw_houses = []
 
     with open(path, newline='', encoding='utf-8-sig') as f:
         reader = csv.reader(f)
         for row in reader:
-            houses.append([float(elem) for elem in row])
+            raw_houses.append([float(elem) for elem in row])
 
     max_dist = args.max_distance + 1
     num_taps = args.num_taps
 
     while max_dist > args.max_distance:
 
-        houses, taps, max_dist, run_data = optimise(houses, args.max_load,
+        houses, taps, max_dist, run_data = optimise(raw_houses, args.max_load,
                                                     num_taps=num_taps,
                                                     steps=args.steps,
                                                     debug=args.debug,
@@ -90,7 +92,7 @@ def main():
 
         num_taps = len(taps) + 1
 
-        if args.disable_auto:
+        if args.disable_auto or args.max_distance < 0:
             break
 
     # visulise here
@@ -148,8 +150,10 @@ def main():
 
         fig.tight_layout()
 
-    print([tap[3] for tap in taps])
+        print([tap[3] for tap in taps])
 
-    print('final energy is: ', run_data[-1][-1][1])
+        print('final energy is: ', run_data[-1][-1][1])
+
+    print('The biggest walk is:', max_dist)
 
     plt.show()

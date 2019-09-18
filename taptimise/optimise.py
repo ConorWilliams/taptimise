@@ -9,7 +9,7 @@ from .classes import Tap, House
 BUFFER_MULTIPLYER = 5
 STEP_MULTIPLYER = 500
 ZTC_MULTIPLYER = 50
-TEMPERATURE_MULTIPLYER = 10
+TEMPERATURE_MULTIPLYER = 2
 
 KB_AVERAGE_RUNS = 100
 LENGTH_SCALE_THRESHOLD = 0.5
@@ -58,8 +58,9 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
 
     # main cooling
     debug_data = []
-    for order in range(num_scales):
-        run_info = cool(houses, taps, steps, kB, debug=debug, order=order)
+    for i in range(num_scales):
+        run_info = cool(houses, taps, steps, kB,
+                        debug=debug, order=num_scales - i)
         kB = calc_kB(houses, taps)
         debug_data.append(run_info)
 
@@ -69,6 +70,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
 
     h_out = [(h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist())
              for h in houses]
+
     t_out = [(t.pos.real, t.pos.imag, i, round(t.load / t.max_load * 100))
              for i, t in enumerate(taps)]
 
@@ -77,7 +79,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     return h_out, t_out, max_dist, debug_data
 
 
-def cool(houses, taps, steps, kB, debug=False, order=0):
+def cool(houses, taps, steps, kB, debug=False, order=1):
     # performs a round of cooling to optimise tap positions
     energy = 0
     for t in taps:
@@ -95,7 +97,7 @@ def cool(houses, taps, steps, kB, debug=False, order=0):
         return data
 
     for i in trange(steps):
-        temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER ** (1 / (order + 1))
+        temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER * order
         random.shuffle(houses)
 
         if debug:
@@ -215,7 +217,7 @@ def calc_scales(houses):
     for s in dists:
         scales[int(math.floor(s))] += 1
 
-    expectation = len(dists) / maxd * LENGTH_SCALE_THRESHOLD
+    expectation = len(houses) - 1
 
     num_scales = 0
     for s in scales:

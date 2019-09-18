@@ -3,7 +3,7 @@
 import math
 import random
 
-DISTANCE_PENALTY = 10
+DISTANCE_EXPONENT = 1
 OVERLOAD_EXPONENT = 2
 OVERLOAD_BASE = 10
 EXPECTATION_EXPONENT = 2
@@ -61,7 +61,7 @@ class Tap():
 
         if self.load > self.max_load:
             self.energy *= (self.load / self.max_load) ** OVERLOAD_EXPONENT
-        
+
         # if self.load > self.max_load:
         #     self.energy *= (OVERLOAD_BASE ** (self.load / self.max_load - 1))
 
@@ -73,7 +73,7 @@ def bond_energy(tap, house):
     rel = rel.real**2 + rel.imag**2
 
     if house.max_sq_dist > 0 and rel > house.max_sq_dist:
-        rel *= DISTANCE_PENALTY
+        rel *= ((rel / house.max_sq_dist) ** DISTANCE_EXPONENT)
 
     rel *= house.demand
 
