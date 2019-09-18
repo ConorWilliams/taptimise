@@ -85,6 +85,11 @@ class House():
 
         self.tap = tap
 
+    def dist(self):
+        rel = self.pos - self.tap.pos
+        rel = rel.real**2 + rel.imag**2
+        return math.sqrt(rel)
+
 
 def bond_energy(tap, house):
     rel = tap.pos - house.pos

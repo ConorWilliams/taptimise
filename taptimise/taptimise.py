@@ -82,22 +82,29 @@ def main():
 
     # visulise here
 
-    # cmap = plt.cm.get_cmap('nipy_spectral', len(taps))
+    # for h in houses:
+    #     print(h)
 
-    # h = np.asarray(houses)
-    # t = np.asarray(taps)
+    cmap = plt.cm.get_cmap('nipy_spectral', len(taps))
 
-    # plt.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=16)
-    # plt.plot(t[:, 2], t[:, 1], '+', color='k', markersize=8, label='Taps')
-    # plt.title("Optimised for " + str(len(taps)) + ' taps')
-    # plt.gca().set_aspect('equal')
+    h = np.asarray(houses)
+    t = np.asarray(taps)
 
-    # plt.axis(xmin=minLong, ymin=minLat, xmax=minLong +
-    #          length, ymax=minLat + length)
+    plt.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=16)
+    plt.plot(t[:, 1], t[:, 0], '+', color='k', markersize=8, label='Taps')
+    plt.title("Optimised for " + str(len(taps)) + ' taps')
+    plt.gca().set_aspect('equal')
 
-    # plt.xlabel('Latitude')
-    # plt.ylabel('Longitude')
+    plt.xlabel('Latitude')
+    plt.ylabel('Longitude')
 
-    # plt.legend()
+    xmin, xmax = h[::, 1].min(), h[::, 1].max()
+    ymin, ymax = h[::, 0].min(), h[::, 0].max()
 
-    print('Done')
+    gap = max(xmax - xmin, ymax - ymin)
+
+    plt.axis((xmin, xmin + gap, ymin, ymin + gap))
+
+    plt.legend()
+
+    plt.show()
