@@ -5,6 +5,7 @@ import random
 
 DISTANCE_PENALTY = 10
 OVERLOAD_EXPONENT = 2
+OVERLOAD_BASE = 2
 
 
 class Buffer():
@@ -43,6 +44,8 @@ class Tap():
         self.houses = set()
 
     def centralise(self):
+        if self.load == 0:
+            return
         self.pos = self.vec_sum / self.load
 
     def score(self):
@@ -52,13 +55,28 @@ class Tap():
         for h in self.houses:
             self.energy += bond_energy(self, h)
 
-        if self.load > self.max_load:
-            self.energy *= (self.load / self.max_load) ** OVERLOAD_EXPONENT
+        if self.load > self.exp_load:
+            self.energy *= (self.load / self.exp_load) ** OVERLOAD_EXPONENT
 
-        var_like = ((self.load - self.exp_load)**2 / self.exp_load) + 1
-        self.energy *= math.log(var_like) + 1
+        if self.load > self.max_load:
+            self.energy *= OVERLOAD_BASE ** (self.load / self.max_load - 1)
+
+        # var_like = ((self.load - self.exp_load)**2 / self.exp_load) + 1
+        # self.energy *= math.log(var_like) + 1
 
         return self.energy - self.old_energy
+
+
+def bond_energy(tap, house):
+    rel = tap.pos - house.pos
+    rel = rel.real**2 + rel.imag**2
+
+    if house.max_sq_dist > 0 and rel > house.max_sq_dist:
+        rel *= DISTANCE_PENALTY
+
+    rel *= house.demand
+
+    return rel
 
 
 class House():
@@ -89,15 +107,3 @@ class House():
         rel = self.pos - self.tap.pos
         rel = rel.real**2 + rel.imag**2
         return math.sqrt(rel)
-
-
-def bond_energy(tap, house):
-    rel = tap.pos - house.pos
-    rel = rel.real**2 + rel.imag**2
-
-    if house.max_sq_dist > 0 and rel > house.max_sq_dist:
-        rel *= DISTANCE_PENALTY
-
-    rel *= house.demand
-
-    return rel

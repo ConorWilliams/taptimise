@@ -2,12 +2,14 @@
 
 import random
 import math
+from tqdm import trange
 
 from .classes import Tap, House
 
 BUFFER_MULTIPLYER = 5
 DEFAULT_NUM_SCALES = 2
 STEP_MULTIPLYER = 100
+ZTC_MULTIPLYER = 2
 KB_AVERAGE_RUNS = 1000
 LENGTH_SCALE_THRESHOLD = 0.5
 
@@ -61,12 +63,12 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
         debug_data.append(run_info)
 
     # zero temp cooling
-    run_info = cool(houses, taps, steps, kB, debug=debug)
+    run_info = cool(houses, taps, len(houses) * ZTC_MULTIPLYER, -1, debug=debug)
     debug_data.append(run_info)
 
     h_out = [(h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist())
              for h in houses]
-    t_out = [(t.pos.real, t.pos.imag, i, round(t.load / t.max_load))
+    t_out = [(t.pos.real, t.pos.imag, i, round(t.load / t.max_load * 100))
              for i, t in enumerate(taps)]
 
     max_dist = max(out[3] for out in h_out)
@@ -76,7 +78,69 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
 
 def cool(houses, taps, steps, kB, debug=False):
     # performs a round of cooling to optimise tap positions
-    return
+    energy = 0
+    for t in taps:
+        t.centralise()
+        t.score()
+        energy += t.energy
+
+    data = []
+
+    base = 0.001**-1
+
+    for i in trange(steps):
+        temp = (1 - i / steps)
+        #temp = base**(i / steps)
+
+        random.shuffle(houses)
+
+        if debug:
+            counters = [0, 0, 0]
+
+        for h in houses:
+            old_tap = h.tap
+            new_tap = h.buff.rand()
+
+            while new_tap is old_tap:
+                new_tap = random.choice(taps)
+
+            h.detach()
+            h.attach(new_tap)
+
+            old_tap.centralise()
+            new_tap.centralise()
+
+            delta_E = old_tap.score() + new_tap.score()
+
+            if delta_E < 0:
+                if debug:
+                    counters[0] += 1
+                energy += delta_E
+
+            elif kB > 0 and random.random() < math.exp(-delta_E / (kB * temp)):
+                if debug:
+                    counters[1] += 1
+                energy += delta_E
+
+            else:
+                if debug:
+                    counters[2] += 1
+
+                h.detach()
+                h.attach(old_tap)
+
+                old_tap.energy = old_tap.old_energy
+                new_tap.energy = new_tap.old_energy
+
+                # does not recalculate centre
+
+        if debug:
+            data.append([temp, energy, *counters])
+
+    for t in taps:
+        t.centralise()
+
+    return data
 
 
 def randomise(houses, taps):

@@ -13,6 +13,17 @@ from .__init__ import __version__
 from .optimise import optimise
 
 
+def smooth(a, WSZ):
+    # a: NumPy 1-D array containing the data to be smoothed
+    # WSZ: smoothing window size needs, which must be odd number,
+    # as in the original MATLAB implementation
+    out0 = np.convolve(a, np.ones(WSZ, dtype=int), 'valid') / WSZ
+    r = np.arange(1, WSZ - 1, 2)
+    start = np.cumsum(a[:WSZ - 1])[::2] / r
+    stop = (np.cumsum(a[:-WSZ:-1])[::2] / r)[::-1]
+    return np.concatenate((start, out0, stop))
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -27,13 +38,13 @@ def main():
     parser.add_argument("-m", "--max-distance", type=float, default=-1,
                         help="maximum house-tap distance", action="store")
 
-    parser.add_argument('-d', '--debug', action='store_false',
+    parser.add_argument('-d', '--debug', action='store_true',
                         help='save run data for debugging')
 
     parser.add_argument('-b', '--buffer-size', type=int, action='store',
                         help='size of each houses internal buffer')
 
-    parser.add_argument("-s", "--steps", action="store_true",
+    parser.add_argument("-s", "--steps", action="store", type=int,
                         help="number of cooling steps per scale")
 
     parser.add_argument('--disable-multiscale', action='store_false',
@@ -106,5 +117,37 @@ def main():
     plt.axis((xmin, xmin + gap, ymin, ymin + gap))
 
     plt.legend()
+
+    if args.debug:
+
+        data = np.asarray(run_data[0])
+        ind = np.arange(data.shape[0])    # the x locations for the groups
+        width = 1       # the width of the bars: can also be len(x) sequence
+
+        fig, ax1 = plt.subplots()
+
+        window = 11
+
+        color = 'tab:red'
+        ax1.set_xlabel('steps')
+        ax1.set_ylabel('energy', color=color)
+        ax1.plot(ind, smooth(data[::, 2], window))
+        ax1.plot(ind, smooth(data[::, 3] + data[::, 2], window))
+        ax1.plot(ind, smooth(data[::, 4] + data[::, 2] + data[::, 3], window))
+        ax1.tick_params(axis='y', labelcolor=color)
+
+        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+        color = 'tab:blue'
+        # we already handled the x-label with ax1
+        ax2.set_ylabel('decisions', color=color)
+
+        ax2.tick_params(axis='y', labelcolor=color)
+        ax2.plot(ind, smooth(data[::, 1], window), color='k')
+
+        fig.tight_layout()  # otherwise the right y-label is slightly clipped
+
+    for tap in taps:
+        print(tap[3])
 
     plt.show()
