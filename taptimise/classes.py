@@ -5,7 +5,8 @@ import random
 
 DISTANCE_PENALTY = 10
 OVERLOAD_EXPONENT = 2
-OVERLOAD_BASE = 2
+OVERLOAD_BASE = 10
+EXPECTATION_EXPONENT = 2
 
 
 class Buffer():
@@ -56,10 +57,13 @@ class Tap():
             self.energy += bond_energy(self, h)
 
         if self.load > self.exp_load:
-            self.energy *= (self.load / self.exp_load) ** OVERLOAD_EXPONENT
+            self.energy *= (self.load / self.exp_load) ** EXPECTATION_EXPONENT
 
+        if self.load > self.max_load:
+            self.energy *= (self.load / self.max_load) ** OVERLOAD_EXPONENT
+        
         # if self.load > self.max_load:
-        #     self.energy *= OVERLOAD_BASE ** (self.load / self.max_load - 1)
+        #     self.energy *= (OVERLOAD_BASE ** (self.load / self.max_load - 1))
 
         return self.energy - self.old_energy
 

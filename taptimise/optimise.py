@@ -6,16 +6,17 @@ from tqdm import trange
 
 from .classes import Tap, House
 
-BUFFER_MULTIPLYER = 1
-DEFAULT_NUM_SCALES = 1
-STEP_MULTIPLYER = 100
-ZTC_MULTIPLYER = 2
-KB_AVERAGE_RUNS = 1000
+BUFFER_MULTIPLYER = 5
+STEP_MULTIPLYER = 500
+ZTC_MULTIPLYER = 50
+TEMPERATURE_MULTIPLYER = 10
+
+KB_AVERAGE_RUNS = 100
 LENGTH_SCALE_THRESHOLD = 0.5
 
 
 def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
-             multiscale=True, max_dist=-1, buff_size=None):
+             multiscale=None, max_dist=-1, buff_size=None):
     # finds optimal tap position for houses
     tot_demand = sum(h[2] for h in houses)
 
@@ -25,7 +26,9 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     avg_frac_load = tot_demand / (num_taps * max_load)
 
     if steps is None:
-        steps = len(houses) * STEP_MULTIPLYER
+        steps = num_taps * STEP_MULTIPLYER
+
+    print('Step ratio is,', steps / num_taps, 'N')
 
     if buff_size is None:
         buff_size = num_taps * BUFFER_MULTIPLYER
@@ -46,22 +49,22 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
 
     kB /= KB_AVERAGE_RUNS
 
-    if multiscale:
+    if multiscale is None:
         num_scales = calc_scales(houses)
     else:
-        num_scales = DEFAULT_NUM_SCALES
+        num_scales = multiscale
 
     print('Found %d length scales' % num_scales)
 
     # main cooling
     debug_data = []
-    for _ in range(num_scales):
-        run_info = cool(houses, taps, steps, kB, debug=debug)
+    for order in range(num_scales):
+        run_info = cool(houses, taps, steps, kB, debug=debug, order=order)
         kB = calc_kB(houses, taps)
         debug_data.append(run_info)
 
     # zero temp cooling
-    run_info = cool(houses, taps, len(houses) * ZTC_MULTIPLYER, -1, debug=debug)
+    run_info = cool(houses, taps, num_taps * ZTC_MULTIPLYER, -1, debug=debug)
     debug_data.append(run_info)
 
     h_out = [(h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist())
@@ -74,7 +77,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     return h_out, t_out, max_dist, debug_data
 
 
-def cool(houses, taps, steps, kB, debug=False):
+def cool(houses, taps, steps, kB, debug=False, order=0):
     # performs a round of cooling to optimise tap positions
     energy = 0
     for t in taps:
@@ -84,8 +87,15 @@ def cool(houses, taps, steps, kB, debug=False):
 
     data = []
 
+    # one tap edge case
+    if len(taps) <= 1:
+        if debug:
+            data.append([TEMPERATURE_MULTIPLYER, energy, 0, 0, 0])
+
+        return data
+
     for i in trange(steps):
-        temp = (1 - i / steps) * 10
+        temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER ** (1 / (order + 1))
         random.shuffle(houses)
 
         if debug:
@@ -140,6 +150,7 @@ def cool(houses, taps, steps, kB, debug=False):
 def randomise(houses, taps):
     # sets taps to random positions
     # assigns houses random tap
+    # does not centralise taps
 
     xmin, xmax, ymin, ymax = get_grid(houses)
 

@@ -12,8 +12,10 @@ from matplotlib import pyplot as plt
 from .__init__ import __version__
 from .optimise import optimise
 
+WINDOW_SIZE = 11  # must be an odd number
 
-def smooth(a, WSZ):
+
+def smooth(a, WSZ=WINDOW_SIZE):
     # a: NumPy 1-D array containing the data to be smoothed
     # WSZ: smoothing window size needs, which must be odd number,
     # as in the original MATLAB implementation
@@ -38,20 +40,20 @@ def main():
     parser.add_argument("-m", "--max-distance", type=float, default=-1,
                         help="maximum house-tap distance", action="store")
 
-    parser.add_argument('-d', '--debug', action='store_true',
-                        help='save run data for debugging')
-
     parser.add_argument('-b', '--buffer-size', type=int, action='store',
                         help='size of each houses internal buffer')
 
     parser.add_argument("-s", "--steps", action="store", type=int,
                         help="number of cooling steps per scale")
 
-    parser.add_argument('--disable-multiscale', action='store_false',
-                        help='disables multiscale detection')
+    parser.add_argument('--num-scales', action='store', type=int,
+                        help='set number of scales')
 
     parser.add_argument('--disable-auto', action='store_false',
                         help='disables auto rerun if house too far')
+
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='save run data for debugging')
 
     parser.add_argument("-v", "--version", action="store_true",
                         help="Show version and exit")
@@ -82,7 +84,7 @@ def main():
                                                     num_taps=num_taps,
                                                     steps=args.steps,
                                                     debug=args.debug,
-                                                    multiscale=args.disable_multiscale,
+                                                    multiscale=args.num_scales,
                                                     max_dist=args.max_distance,
                                                     buff_size=args.buffer_size)
 
@@ -120,34 +122,34 @@ def main():
 
     if args.debug:
 
-        width = 1       # the width of the bars: can also be len(x) sequence
+        width = 1
 
         fig, axis = plt.subplots(len(run_data))
-
-        window = 11
 
         E0 = run_data[0][0][1]
 
         for ax, run in zip(axis, run_data):
 
             data = np.asarray(run)
-            ind = np.arange(data.shape[0])    # the x locations for the groups
+            ind = np.arange(len(run))
 
             ax.set_xlabel('Monte-Carlo Steps')
             ax.set_ylabel('Counters')
-            ax.plot(ind, smooth(data[::, 2], window))
-            ax.plot(ind, smooth(data[::, 3] + data[::, 2], window))
-            ax.plot(ind, smooth(data[::, 4] +
-                                data[::, 2] + data[::, 3], window))
+            ax.plot(ind, smooth(data[::, 2]))
+            ax.plot(ind, smooth(data[::, 3] + data[::, 2]))
+            ax.plot(ind, smooth(data[::, 4] + data[::, 2] + data[::, 3]))
+            ax.set_xlim(ind[0], ind[-1])
+            ax.set_ylim(bottom=0)
 
-            ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
+            ax2 = ax.twinx()
 
             ax2.set_ylabel('Energy')
-            ax2.plot(ind, smooth(data[::, 1] / E0, window), color='k')
+            ax2.plot(ind, smooth(data[::, 1] / E0), color='k')
 
-            fig.tight_layout()  # otherwise the right y-label is slightly clipped
+        fig.tight_layout()
 
-    for tap in taps:
-        print(tap[3])
+    print([tap[3] for tap in taps])
+
+    print('final energy is: ', run_data[-1][-1][1])
 
     plt.show()
