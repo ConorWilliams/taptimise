@@ -18,14 +18,14 @@ class Buffer():
             self.pos += 1
             self.data.append(obj)
         else:
-            if self.pos == size:
+            if self.pos == self.size:
                 self.pos = 0
 
             self.data[self.pos] = obj
             self.pos += 1
 
     def rand(self):
-        return self.data[random.randint(0, len(self.data))]
+        return random.choice(self.data)
 
 
 class Tap():
