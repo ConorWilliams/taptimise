@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import math
 import random
 
 DISTANCE_PENALTY = 10
@@ -14,14 +15,14 @@ class Buffer():
 
     def insert(self, obj):
         if len(self.data) < self.size:
-            pos += 1
+            self.pos += 1
             self.data.append(obj)
         else:
-            if pos == size:
-                pos = 0
+            if self.pos == size:
+                self.pos = 0
 
-            self.data[pos] = obj
-            pos += 1
+            self.data[self.pos] = obj
+            self.pos += 1
 
     def rand(self):
         return self.data[random.randint(0, len(self.data))]
@@ -52,9 +53,12 @@ class Tap():
             self.energy += bond_energy(self, h)
 
         if self.load > self.max_load:
-            energy *= (self.load / max_load) ** OVERLOAD_EXPONENT
+            self.energy *= (self.load / self.max_load) ** OVERLOAD_EXPONENT
 
-        energy *= ((self.load / self.max_load - exp_load) / exp_load)**2
+        var_like = ((self.load - self.exp_load)**2 / self.exp_load) + 1
+        self.energy *= math.log(var_like) + 1
+
+        return self.energy - self.old_energy
 
 
 class House():
@@ -65,18 +69,28 @@ class House():
         self.buff = Buffer(buff_size)
         self.max_sq_dist = max_sq_dist
 
-    def attach(self, tap):
-        pass
-
     def detach(self):
-        pass
+        self.tap.houses.remove(self)
+        self.tap.vec_sum -= self.pos * self.demand
+        self.tap.load -= self.demand
+
+        self.tap = None
+
+    def attach(self, tap):
+        tap.houses.add(self)
+        tap.vec_sum += self.pos * self.demand
+        tap.load += self.demand
+
+        self.buff.insert(tap)
+
+        self.tap = tap
 
 
 def bond_energy(tap, house):
     rel = tap.pos - house.pos
     rel = rel.real**2 + rel.imag**2
 
-    if rel > house.max_sq_dist:
+    if house.max_sq_dist > 0 and rel > house.max_sq_dist:
         rel *= DISTANCE_PENALTY
 
     rel *= house.demand

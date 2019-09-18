@@ -30,6 +30,9 @@ def main():
     parser.add_argument('-d', '--debug', action='store_false',
                         help='save run data for debugging')
 
+    parser.add_argument('-b', '--buffer-size', type=int, action='store',
+                        help='size of each houses internal buffer')
+
     parser.add_argument("-s", "--steps", action="store_true",
                         help="number of cooling steps per scale")
 
@@ -64,11 +67,13 @@ def main():
 
     while max_dist > args.max_distance:
 
-        houses, taps, max_dist, run_data = optimise(houses, num_taps, args.max_load,
+        houses, taps, max_dist, run_data = optimise(houses, args.max_load,
+                                                    num_taps=num_taps,
                                                     steps=args.steps,
                                                     debug=args.debug,
                                                     multiscale=args.disable_multiscale,
-                                                    max_dist=args.max_distance)
+                                                    max_dist=args.max_distance,
+                                                    buff_size=args.buffer_size)
 
         num_taps = len(taps) + 1
 
@@ -94,7 +99,5 @@ def main():
     # plt.ylabel('Longitude')
 
     # plt.legend()
-
-    print(houses)
 
     print('Done')
