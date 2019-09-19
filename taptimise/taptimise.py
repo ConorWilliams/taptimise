@@ -6,7 +6,9 @@
 import argparse
 import csv
 import os
+
 import numpy as np
+from pyfiglet import Figlet
 from matplotlib import pyplot as plt
 
 from .__init__ import __version__
@@ -29,34 +31,32 @@ def smooth(a, WSZ=WINDOW_SIZE):
 
 
 def main():
+    custom_fig = Figlet(font='graffiti')
+    print(custom_fig.renderText('Taptimise'))
+    print('Tap placement optimiser with Monte-Carlo-Annealer')
+    print('Copyright 2019 C. J. Williams (CHURCHILL COLLEGE)')
+    print('This is free software with ABSOLUTELY NO WARRANTY')
+    print()
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument("path", help="path to house data")
-
     parser.add_argument('max_load', type=float,
                         help="maximum load a single tap can support")
-
     parser.add_argument('-n', '--num-taps', type=int, action='store',
                         help="number of taps to start with")
-
     parser.add_argument("-m", "--max-distance", type=float, default=-1,
                         help="maximum house-tap distance", action="store")
-
     parser.add_argument('-b', '--buffer-size', type=int, action='store',
                         help='size of each houses internal buffer')
-
     parser.add_argument("-s", "--steps", action="store", type=int,
                         help="number of cooling steps per scale")
-
     parser.add_argument('--num-scales', action='store', type=int,
                         help='set number of scales')
-
     parser.add_argument('--disable-auto', action='store_true',
                         help='disables auto rerun if house too far')
-
     parser.add_argument('-d', '--debug', action='store_true',
                         help='save run data for debugging')
-
     parser.add_argument("-v", "--version", action="store_true",
                         help="Show version and exit")
 
@@ -81,7 +81,6 @@ def main():
     num_taps = args.num_taps
 
     while max_dist > args.max_distance:
-
         houses, taps, max_dist, run_data = optimise(raw_houses, args.max_load,
                                                     num_taps=num_taps,
                                                     steps=args.steps,
@@ -89,8 +88,9 @@ def main():
                                                     multiscale=args.num_scales,
                                                     max_dist=args.max_distance,
                                                     buff_size=args.buffer_size)
-
         num_taps = len(taps) + 1
+
+        print()
 
         if args.disable_auto or args.max_distance < 0:
             break
@@ -110,8 +110,8 @@ def main():
     plt.title("Optimised for " + str(len(taps)) + ' taps')
     plt.gca().set_aspect('equal')
 
-    plt.xlabel('Latitude')
-    plt.ylabel('Longitude')
+    plt.ylabel('Latitude')
+    plt.xlabel('Longitude')
 
     xmin, xmax = h[::, 1].min(), h[::, 1].max()
     ymin, ymax = h[::, 0].min(), h[::, 0].max()
@@ -150,9 +150,9 @@ def main():
 
         fig.tight_layout()
 
-        print([tap[3] for tap in taps])
+        print('Percentage loads:', ', '.join(str(tap[3]) for tap in taps))
 
-        print('final energy is: ', run_data[-1][-1][1])
+        print('Total final energy is: ', run_data[-1][-1][1])
 
     print('The biggest walk is:', max_dist)
 

@@ -2,13 +2,14 @@
 
 import random
 import math
+
 from tqdm import trange
 
 from .classes import Tap, House
 
 BUFFER_MULTIPLYER = 5
-STEP_MULTIPLYER = 500
-ZTC_MULTIPLYER = 50
+STEP_MULTIPLYER = 1000
+ZTC_MULTIPLYER = int(STEP_MULTIPLYER / 10)
 TEMPERATURE_MULTIPLYER = 2
 
 KB_AVERAGE_RUNS = 100
@@ -23,12 +24,14 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     if num_taps is None:
         num_taps = int(math.ceil(tot_demand / max_load))
 
+    print('Attempting to optimise', num_taps, 'taps.')
+
     avg_frac_load = tot_demand / (num_taps * max_load)
 
     if steps is None:
         steps = num_taps * STEP_MULTIPLYER
 
-    print('Step ratio is,', steps / num_taps, 'N')
+    print('Running,', steps / num_taps, 'MCS per tap.')
 
     if buff_size is None:
         buff_size = num_taps * BUFFER_MULTIPLYER
@@ -54,8 +57,8 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     else:
         num_scales = multiscale
 
-    print('Found %d length scales' % num_scales)
-
+    print()
+    print('Optimising over %d length scales:' % num_scales)
     # main cooling
     debug_data = []
     for i in range(num_scales):
@@ -65,6 +68,9 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
         debug_data.append(run_info)
 
     # zero temp cooling
+    print()
+    print('Zero temperature optimisation:')
+
     run_info = cool(houses, taps, num_taps * ZTC_MULTIPLYER, -1, debug=debug)
     debug_data.append(run_info)
 
@@ -96,7 +102,7 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
 
         return data
 
-    for i in trange(steps):
+    for i in trange(steps, ascii=True):
         temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER * order
         random.shuffle(houses)
 
