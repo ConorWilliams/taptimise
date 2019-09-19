@@ -22,8 +22,7 @@ setup(
     entry_points={
         "console_scripts": ['taptimise = taptimise.taptimise:main']
     },
-    install_requires=['tqdm', 'math', 'random', 'argparse', 'csv',
-                      'os', 'io', 'sys', 'numpy', 'pyfiglet', 'matplotlib'],
+    install_requires=['tqdm', 'csv', 'numpy', 'pyfiglet', 'matplotlib'],
     version=version,
     description="Second generation tap optimisation algorithm for the eWaterPay project.",
     long_description=long_descr,
