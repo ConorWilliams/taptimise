@@ -7,6 +7,7 @@ import argparse
 import csv
 import os
 import io
+import sys
 
 import numpy as np
 from pyfiglet import Figlet
@@ -14,6 +15,7 @@ from matplotlib import pyplot as plt
 
 from .__init__ import __version__
 from .optimise import optimise
+from .htmltable import to_html
 
 WINDOW_SIZE = 11  # must be an odd number
 
@@ -31,6 +33,25 @@ def smooth(a, WSZ=WINDOW_SIZE):
     return np.concatenate((start, out0, stop))
 
 
+def save_svg(fig):
+    w, h = fig.get_size_inches()
+    w, h = round(w + 0.5), round(h + 0.5)
+
+    fig.set_size_inches(w, h)
+
+    w, h = int(72 * w), int(72 * h)
+
+    tmp = io.StringIO()
+    fig.savefig(tmp, format="svg")
+
+    svg = '<svg' + tmp.getvalue().split('<svg')[1]
+
+    svg = svg.replace(f'height="{h}pt"', '', 1)
+    svg = svg.replace(f'width="{w}pt"', 'width="100%"', 1)
+
+    return svg
+
+
 def main():
     custom_fig = Figlet(font='graffiti')
     print(custom_fig.renderText('Taptimise'))
@@ -38,6 +59,10 @@ def main():
     print('Copyright 2019 C. J. Williams (CHURCHILL COLLEGE)')
     print('This is free software with ABSOLUTELY NO WARRANTY')
     print()
+
+# ****************************************************************************
+# *                              Parse Arguments                             *
+# ****************************************************************************
 
     parser = argparse.ArgumentParser()
 
@@ -71,6 +96,10 @@ def main():
     else:
         path = os.path.abspath(args.path)
 
+# ****************************************************************************
+# *                             Run Optimisation                             *
+# ****************************************************************************
+
     raw_houses = []
 
     with open(path, newline='', encoding='utf-8-sig') as f:
@@ -82,13 +111,13 @@ def main():
     num_taps = args.num_taps
 
     while max_dist > args.max_distance:
-        houses, taps, max_dist, run_data = optimise(raw_houses, args.max_load,
-                                                    num_taps=num_taps,
-                                                    steps=args.steps,
-                                                    debug=args.debug,
-                                                    multiscale=args.num_scales,
-                                                    max_dist=args.max_distance,
-                                                    buff_size=args.buffer_size)
+        houses, taps, max_dist, run_data, scales = optimise(raw_houses, args.max_load,
+                                                            num_taps=num_taps,
+                                                            steps=args.steps,
+                                                            debug=args.debug,
+                                                            multiscale=args.num_scales,
+                                                            max_dist=args.max_distance,
+                                                            buff_size=args.buffer_size)
         num_taps = len(taps) + 1
 
         print()
@@ -96,73 +125,73 @@ def main():
         if args.disable_auto or args.max_distance < 0:
             break
 
-    # visulise here
+# ****************************************************************************
+# *                               Plot Village                               *
+# ****************************************************************************
 
-    # for h in houses:
-    #     print(h)
+    name = os.path.basename(args.path)[:-4]
 
     cmap = plt.cm.get_cmap('nipy_spectral', len(taps))
 
     h = np.asarray(houses)
     t = np.asarray(taps)
 
-    f, a = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 6))
 
-    a.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=16)
-    a.plot(t[:, 1], t[:, 0], '+', color='k', markersize=8, label='Taps')
-    a.set_title("Optimised for " + str(len(taps)) + ' taps')
-    a.set_aspect('equal')
+    ax.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=16)
+    ax.plot(t[:, 1], t[:, 0], '+', color='k', markersize=8, label='Taps')
+    ax.set_title(f"{name} optimised for " + str(len(taps)) + ' taps')
+    ax.set_aspect('equal')
 
-    a.set_ylabel('Latitude')
-    a.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    ax.set_xlabel('Longitude')
 
     xmin, xmax = h[::, 1].min(), h[::, 1].max()
     ymin, ymax = h[::, 0].min(), h[::, 0].max()
 
     gap = max(xmax - xmin, ymax - ymin)
 
-    a.set_xlim((xmin, xmin + gap))
-    a.set_ylim((ymin, ymin + gap))
+    ax.set_xlim((xmin, xmin + gap))
+    ax.set_ylim((ymin, ymin + gap))
 
-    a.legend()
+    ax.xaxis.set_ticklabels([])
+    ax.yaxis.set_ticklabels([])
 
-    dummy = io.BytesIO()
-    f.savefig(dummy, format="svg")
+    ax.set_xticks([])
+    ax.set_yticks([])
 
-    svg = '<svg' + str(dummy.getvalue()).split('<svg')[1]
+    ax.legend()
 
-    s1 = f'''
-    <html>
-    <head>
-    <title>
-    A Simple HTML Document
-    </title>
-    </head>
-    <body>
-    <p>This is a very simple HTML document</p>
-    <p>It only has two paragraphs</p>
-    {svg}
-    </body>
-    </html>'''
+    fig.tight_layout()
 
-    with open(f"{os.path.basename(args.path)[:-4]}.html", "w") as html:
-        print(s1, file=html)
+    map_svg = save_svg(fig)
+
+
+# ****************************************************************************
+# *                                Plot Debug                                *
+# ****************************************************************************
+
+    debug_svg = []
 
     if args.debug:
 
         width = 1
 
-        fig2, axis = plt.subplots(len(run_data))
-
         E0 = run_data[0][0][1]
 
-        for ax, run in zip(axis, run_data):
+        for order, run in enumerate(run_data):
+
+            if order == len(run_data) - 1:
+                order = "ZTC"
+
+            fig, ax = plt.subplots()
 
             data = np.asarray(run)
             ind = np.arange(len(run))
 
             ax.set_xlabel('Monte-Carlo Steps')
             ax.set_ylabel('Counters')
+            ax.set_title(f'Order = {order}')
             ax.plot(ind, smooth(data[::, 2]))
             ax.plot(ind, smooth(data[::, 3] + data[::, 2]))
             ax.plot(ind, smooth(data[::, 4] + data[::, 2] + data[::, 3]))
@@ -171,10 +200,14 @@ def main():
 
             ax2 = ax.twinx()
 
-            ax2.set_ylabel('Energy')
+            ax2.set_ylabel('Energy Fraction')
             ax2.plot(ind, smooth(data[::, 1] / E0), color='k')
 
-        fig2.tight_layout()
+            fig.tight_layout()
+
+            svg = save_svg(fig)
+
+            debug_svg.append(svg)
 
         print('Percentage loads:', ', '.join(str(tap[3]) for tap in taps))
 
@@ -182,4 +215,95 @@ def main():
 
     print('The biggest walk is:', max_dist)
 
-    plt.show()
+# ****************************************************************************
+# *                                 Make html                                *
+# ****************************************************************************
+
+    raw_html = f'''
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+    <title> Taptimise {name} Report </title>
+    </head>
+
+    <style>
+    .center_svg {{
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;}}
+
+    .center_txt {{
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;}}
+
+    h1{{font-size:50px;}}
+    h2{{font-size:40px;}}
+    p{{font-size:20px;}}
+
+    table {{
+            border-collapse: collapse;
+            width: 100%;}}
+
+    td, th {{
+            font-size:20px;
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;}}
+
+    tr:nth-child(even) {{
+            background-color: #dddddd;}}
+
+    table th {{
+        background-color: black;
+        color: white;}}
+
+    </style>
+
+    <body>
+
+    <div class="center_txt">
+
+    <h1 align="center">Taptimise Report - Village: {name}</h1>
+
+    <p> This report has been generated using Taptimise the tap positioning 
+        Monte-Carlo-Annealing optimiser. For more information and bug reporting 
+        visit <a href="https://github.com/ConorWilliams/taptimise">GitHub</a>.
+        </p>
+    <p> The arguments & flags given to produce this report where: 
+        "{' '.join(sys.argv[1:])}" running Taptimise version {__version__}. </p>
+
+    <p> Taptimise placed <b>{len(taps)} taps</b>, running over <b>{scales} 
+        length scales</b>. The furthest tap-house separation was 
+        {'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} units. </p>
+
+    <h2>Village Map</h2>
+
+    </div>
+
+    </div>
+    <div class="center_svg">
+    {map_svg}
+    </div>
+
+    <div class="center_txt">
+    <h2>Tap Data</h2>
+    {to_html(['Latitude', 'Longitude', 'Number', 'Load %'], taps)}
+    <h2>House Data</h2>
+    {to_html(['Latitude', 'Longitude', 'Tap Number', 'Walking Dist'], houses)}
+    <h2>Debug Visualisations</h2>
+    </div>
+
+    </div>
+    <div class="center_svg">
+    {''.join(debug_svg)}
+    </div>
+
+    </body>
+    </html>'''
+
+    with open(f"{name}_report.html", "w") as html:
+        html.write(raw_html)

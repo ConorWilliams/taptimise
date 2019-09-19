@@ -8,7 +8,7 @@ from tqdm import trange
 from .classes import Tap, House
 
 BUFFER_MULTIPLYER = 5
-STEP_MULTIPLYER = 1000
+STEP_MULTIPLYER = 2500
 ZTC_MULTIPLYER = int(STEP_MULTIPLYER / 10)
 TEMPERATURE_MULTIPLYER = 2
 
@@ -29,9 +29,9 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     avg_frac_load = tot_demand / (num_taps * max_load)
 
     if steps is None:
-        steps = num_taps * STEP_MULTIPLYER
+        steps = int(math.sqrt(num_taps) * STEP_MULTIPLYER)
 
-    print('Running,', steps / num_taps, 'MCS per tap.')
+    print('Running,', steps / math.sqrt(num_taps), 'MCS per tap.')
 
     if buff_size is None:
         buff_size = num_taps * BUFFER_MULTIPLYER
@@ -82,7 +82,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
 
     max_dist = max(out[3] for out in h_out)
 
-    return h_out, t_out, max_dist, debug_data
+    return h_out, t_out, max_dist, debug_data, num_scales
 
 
 def cool(houses, taps, steps, kB, debug=False, order=1):
