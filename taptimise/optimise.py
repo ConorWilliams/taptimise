@@ -127,12 +127,16 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
             if delta_E < 0:
                 if debug:
                     counters[0] += 1
+
                 energy += delta_E
+                h.buff.insert(new_tap)
 
             elif kB > 0 and random.random() < math.exp(-delta_E / (kB * temp)):
                 if debug:
                     counters[1] += 1
+
                 energy += delta_E
+                h.buff.insert(new_tap)
 
             else:
                 if debug:
@@ -143,6 +147,8 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
 
                 old_tap.energy = old_tap.old_energy
                 new_tap.energy = new_tap.old_energy
+
+                h.buff.insert(old_tap)
 
                 # does not recalculate centre
 
@@ -169,7 +175,10 @@ def randomise(houses, taps):
         if h.tap is not None:
             h.detach()
 
-        h.attach(random.choice(taps))
+        tap = random.choice(taps)
+
+        h.attach(tap)
+        h.buff.insert(tap)
 
     return
 

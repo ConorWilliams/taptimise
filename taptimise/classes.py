@@ -59,11 +59,11 @@ class Tap():
         if self.load > self.exp_load:
             self.energy *= (self.load / self.exp_load) ** EXPECTATION_EXPONENT
 
-        if self.load > self.max_load:
-            self.energy *= (self.load / self.max_load) ** OVERLOAD_EXPONENT
-
         # if self.load > self.max_load:
-        #     self.energy *= (OVERLOAD_BASE ** (self.load / self.max_load - 1))
+        #     self.energy *= (self.load / self.max_load) ** OVERLOAD_EXPONENT
+
+        if self.load > self.max_load:
+            self.energy *= (OVERLOAD_BASE ** (self.load / self.max_load - 1))
 
         return self.energy - self.old_energy
 
@@ -99,8 +99,6 @@ class House():
         tap.houses.add(self)
         tap.vec_sum += self.pos * self.demand
         tap.load += self.demand
-
-        self.buff.insert(tap)
 
         self.tap = tap
 

@@ -6,6 +6,7 @@
 import argparse
 import csv
 import os
+import io
 
 import numpy as np
 from pyfiglet import Figlet
@@ -105,28 +106,53 @@ def main():
     h = np.asarray(houses)
     t = np.asarray(taps)
 
-    plt.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=16)
-    plt.plot(t[:, 1], t[:, 0], '+', color='k', markersize=8, label='Taps')
-    plt.title("Optimised for " + str(len(taps)) + ' taps')
-    plt.gca().set_aspect('equal')
+    f, a = plt.subplots()
 
-    plt.ylabel('Latitude')
-    plt.xlabel('Longitude')
+    a.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=16)
+    a.plot(t[:, 1], t[:, 0], '+', color='k', markersize=8, label='Taps')
+    a.set_title("Optimised for " + str(len(taps)) + ' taps')
+    a.set_aspect('equal')
+
+    a.set_ylabel('Latitude')
+    a.set_xlabel('Longitude')
 
     xmin, xmax = h[::, 1].min(), h[::, 1].max()
     ymin, ymax = h[::, 0].min(), h[::, 0].max()
 
     gap = max(xmax - xmin, ymax - ymin)
 
-    plt.axis((xmin, xmin + gap, ymin, ymin + gap))
+    a.set_xlim((xmin, xmin + gap))
+    a.set_ylim((ymin, ymin + gap))
 
-    plt.legend()
+    a.legend()
+
+    dummy = io.BytesIO()
+    f.savefig(dummy, format="svg")
+
+    svg = '<svg' + str(dummy.getvalue()).split('<svg')[1]
+
+    s1 = f'''
+    <html>
+    <head>
+    <title>
+    A Simple HTML Document
+    </title>
+    </head>
+    <body>
+    <p>This is a very simple HTML document</p>
+    <p>It only has two paragraphs</p>
+    {svg}
+    </body>
+    </html>'''
+
+    with open(f"{os.path.basename(args.path)[:-4]}.html", "w") as html:
+        print(s1, file=html)
 
     if args.debug:
 
         width = 1
 
-        fig, axis = plt.subplots(len(run_data))
+        fig2, axis = plt.subplots(len(run_data))
 
         E0 = run_data[0][0][1]
 
@@ -148,7 +174,7 @@ def main():
             ax2.set_ylabel('Energy')
             ax2.plot(ind, smooth(data[::, 1] / E0), color='k')
 
-        fig.tight_layout()
+        fig2.tight_layout()
 
         print('Percentage loads:', ', '.join(str(tap[3]) for tap in taps))
 
