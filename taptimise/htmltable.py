@@ -26,5 +26,3 @@ def to_html(h, d):
     table = ''.join(table)
 
     return f'<table>{table}</table>'
-
-    # {''.join(row(d) for d in data)}

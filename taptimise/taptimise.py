@@ -209,16 +209,15 @@ def main():
 
             debug_svg.append(svg)
 
-        print('Percentage loads:', ', '.join(str(tap[3]) for tap in taps))
-
         print('Total final energy is: ', run_data[-1][-1][1])
 
     print('The biggest walk is:', max_dist)
+    print('Percentage loads:', ', '.join(str(tap[3]) for tap in taps))
 
 # ****************************************************************************
 # *                                 Make html                                *
 # ****************************************************************************
-
+    percentage = 65
     raw_html = f'''
     <!DOCTYPE html>
     <html>
@@ -232,13 +231,13 @@ def main():
         display: block;
         margin-left: auto;
         margin-right: auto;
-        width: 50%;}}
+        width: {percentage}%;}}
 
     .center_txt {{
         display: block;
         margin-left: auto;
         margin-right: auto;
-        width: 50%;}}
+        width: {percentage}%;}}
 
     h1{{font-size:50px;}}
     h2{{font-size:40px;}}
@@ -278,7 +277,9 @@ def main():
 
     <p> Taptimise placed <b>{len(taps)} taps</b>, running over <b>{scales} 
         length scales</b>. The furthest tap-house separation was 
-        {'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} units. </p>
+        {'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} units. A 
+        summery of the tap loads is: {'%, '.join(str(tap[3]) for tap in taps)}%.
+        </p>
 
     <h2>Village Map</h2>
 

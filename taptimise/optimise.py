@@ -31,7 +31,8 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     if steps is None:
         steps = int(math.sqrt(num_taps) * STEP_MULTIPLYER)
 
-    print('Running,', steps / math.sqrt(num_taps), 'MCS per tap.')
+    print('Running,', steps / math.sqrt(num_taps),
+          'MCS per sqrt(number of taps).')
 
     if buff_size is None:
         buff_size = num_taps * BUFFER_MULTIPLYER
