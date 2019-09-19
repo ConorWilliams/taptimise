@@ -81,7 +81,7 @@ def main():
                         help='set number of scales')
     parser.add_argument('--disable-auto', action='store_true',
                         help='disables auto rerun if house too far')
-    parser.add_argument('-d', '--debug', action='store_true',
+    parser.add_argument('--disable-debug', action='store_false',
                         help='save run data for debugging')
     parser.add_argument("-v", "--version", action="store_true",
                         help="Show version and exit")
@@ -114,7 +114,7 @@ def main():
         houses, taps, max_dist, run_data, scales = optimise(raw_houses, args.max_load,
                                                             num_taps=num_taps,
                                                             steps=args.steps,
-                                                            debug=args.debug,
+                                                            debug=args.disable_debug,
                                                             multiscale=args.num_scales,
                                                             max_dist=args.max_distance,
                                                             buff_size=args.buffer_size)
@@ -173,7 +173,7 @@ def main():
 
     debug_svg = []
 
-    if args.debug:
+    if args.disable_debug:
 
         width = 1
 
