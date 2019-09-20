@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
-__version__ = "0.3"
+__version__ = "1.0"
 
 from .optimise import optimise
