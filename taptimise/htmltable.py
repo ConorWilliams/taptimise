@@ -11,7 +11,10 @@ def head(elems):
 def row(elems):
     out = []
     for elem in elems:
-        out.append(f'<td>{elem}</td>')
+        if type(elem) is float:
+            out.append(f'<td>{round(elem, 5):>09}</td>')
+        else:
+            out.append(f'<td>{elem}</td>')
 
     out = ''.join(out)
 
