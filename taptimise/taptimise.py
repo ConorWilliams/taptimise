@@ -82,13 +82,10 @@ def main():
                         help='disables auto rerun if house too far')
     parser.add_argument('--disable-debug', action='store_false',
                         help='save run data for debugging')
-    parser.add_argument("-v", "--version", action="store_true",
-                        help="Show version and exit")
+    parser.add_argument('-v', '--version', action='version',
+                        version='%(prog)s ' + __version__)
 
     args = parser.parse_args()
-
-    if args.version:
-        exit('Version: ' + __version__)
 
     if os.path.isabs(args.path):
         path = os.path.normpath(args.path)
