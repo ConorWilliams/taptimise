@@ -280,7 +280,7 @@ def main():
     <p> Taptimise placed <b>{len(taps)} taps</b>, running over <b>{scales} 
         length scales</b>. The furthest tap-house separation was 
         {'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} units. A 
-        summery of the tap loads is: {'%, '.join(str(tap[3]) for tap in taps)}%.
+        summery of the tap percentage loads is: {', '.join(str(tap[3]) for tap in taps)}.
         </p>
 
     <h2>Village Map</h2>

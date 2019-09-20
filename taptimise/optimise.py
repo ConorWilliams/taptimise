@@ -10,7 +10,7 @@ from .classes import Tap, House
 BUFFER_MULTIPLYER = 5
 STEP_MULTIPLYER = 2500
 ZTC_MULTIPLYER = int(STEP_MULTIPLYER / 10)
-TEMPERATURE_MULTIPLYER = 2
+TEMPERATURE_MULTIPLYER = 1
 TELEPORT_MULTIPLYER = 0.25
 
 KB_AVERAGE_RUNS = 100
@@ -108,7 +108,7 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
     prob = len(taps) / len(houses) * TELEPORT_MULTIPLYER
 
     for i in trange(steps, ascii=True):
-        temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER * order
+        temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER
         random.shuffle(houses)
 
         if debug:
@@ -117,7 +117,7 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
         for h in houses:
             # teleport check
             if kB > 0 and h.tap.load / h.tap.max_load > OVERVOALT:
-                if random.random() < prob * i / steps:
+                if random.random() < prob * temp:
                     energy += teleport(h, taps)
                     continue
 
@@ -183,11 +183,11 @@ def teleport(h, taps):
         new = o.buff.data[o.buff.pos - 1]
         count = 2
         while new is min_tap:
-            new = o.buff.data[o.buff.pos - count]
-            count += 1
-
             if count > o.buff.size - 1:
                 new = random.choice(taps)
+            else:
+                new = o.buff.data[o.buff.pos - count]
+                count += 1
 
         o.detach()
         o.attach(new)
