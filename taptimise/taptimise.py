@@ -327,5 +327,5 @@ def main():
     </body>
     </html>'''
 
-    with open(f"{name}_report.html", "w") as html:
+    with open(f"{path[:-4]}_report.html", "w") as html:
         html.write(raw_html)
