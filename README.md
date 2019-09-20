@@ -1,8 +1,10 @@
 # Taptimise
 Second generation tap optimisation algorithm for the eWaterPay project.
 
-### Installation (verbose)
+## Installation (verbose)
 Verify your python and pip distributions are correctly installed. You can test this by running `python -V` and `pip -V`. On some machines with both python 2 & 3 these commands are replaced with `python3 -V` and `pip3 -V` respectively.
+
+On windows you will need a terminal with root access to install Taptimise i.e you must search `cmd` into your search bar, right click and press "run as administrator".
 
 #### With Git (recommended)
 
@@ -12,7 +14,13 @@ If [Git](https://git-scm.com/download/win) is installed and accesable from the c
 
 Press on the "Clone or download" button and "Download ZIP". Extract the ZIP archive. `cd` into the extracted folder (probably `taptimise-master`) and install Taptimise with `pip install .` (inluding the .) verify the installation by running: `taptimise -V`.
 
-### Basic Use
+#### Test
+
+Still withing the extracted Taptimise folder, to run a full test on one of the example villages run `taptimise test/e1.csv 1000` and view the generated report `test/e1_report.html` in your web browser.
+
+## Usage
+
+#### Basic
 To run Taptimise with the default setting use:
 `taptimise pat/to/file.csv tap_load`. The csv containing the house positions
 should be formatted exactly as per the
@@ -21,7 +29,7 @@ I.e comma no space, newline separates houses. The path to the csv file can be
 relative or absolute. Taptimise should produce a report
 (`pat/to/file_report.html`) containing the optimised tap positions.
 
-### Advanced Use
+#### Advanced
 
 Taptimise can accept several command line flags to tweak the optimisation.
 
