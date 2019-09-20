@@ -290,11 +290,6 @@ def calc_scales(houses):
         if s >= expectation:
             num_scales += 1
 
-    # from matplotlib import pyplot as plt
-
-    # plt.hist(dists, maxd)
-    # plt.show()
-
     if num_scales < 2:
         return 2
     else:

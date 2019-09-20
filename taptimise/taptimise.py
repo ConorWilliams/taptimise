@@ -241,10 +241,12 @@ def main():
 # ****************************************************************************
 
     for t in taps:
-        t[0], t[1] = convert.enu2geo(*t[:2])
+        t[0], t[1], t[3] = *convert.enu2geo(t[0], t[1]), int(t[3])
+        t[0], t[1] = float(t[0]), float(t[1])
 
     for h in houses:
-        h[0], h[1] = convert.enu2geo(*h[:2])
+        h[0], h[1], h[3] = *convert.enu2geo(h[0], h[1]), int(h[3])
+        h[0], h[1] = float(h[0]), float(h[1])
 
     percentage = 50
     raw_html = f'''
@@ -327,7 +329,7 @@ def main():
     <h2>Tap Data</h2>
     {to_html(['Latitude', 'Longitude', 'Number', 'Load %'], taps)}
     <h2>House Data</h2>
-    {to_html(['Latitude', 'Longitude', 'Tap Number', 'Walking Dist'], houses)}
+    {to_html(['Latitude', 'Longitude', 'Tap Number', 'Separation/m'], houses)}
     <h2>Debug Visualisations</h2>
     </div>
 
