@@ -29,6 +29,10 @@ class Buffer():
     def rand(self):
         return random.choice(self.data)
 
+    def clear(self):
+        self.pos = 0
+        self.data = []
+
 
 class Tap():
     def __init__(self, max_load, exp_load):

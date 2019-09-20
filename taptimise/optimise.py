@@ -37,7 +37,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     avg_frac_load = tot_demand / (num_taps * max_load)
 
     if steps is None:
-        steps = int(math.log(num_taps) * STEP_MULTIPLYER + 1)
+        steps = int(math.log(num_taps) * STEP_MULTIPLYER + num_taps)
 
     ztc_steps = int(steps / ZTC_MULTIPLYER + 1)
 
@@ -115,6 +115,7 @@ def cool(houses, taps, steps, kB, overvolt, debug=False):
 
     for i in trange(steps, ascii=True):
         temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER
+
         random.shuffle(houses)
 
         if debug:
@@ -189,7 +190,7 @@ def teleport(h, taps):
         new = o.buff.data[o.buff.pos - 1]
         count = 2
         while new is min_tap:
-            if count > o.buff.size - 1:
+            if count > len(o.buff.data) - 1:
                 new = random.choice(taps)
             else:
                 new = o.buff.data[o.buff.pos - count]
@@ -197,6 +198,8 @@ def teleport(h, taps):
 
         o.detach()
         o.attach(new)
+
+        o.buff.clear()
         o.buff.insert(new)
 
     h.detach()

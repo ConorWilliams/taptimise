@@ -45,8 +45,8 @@ def save_svg(fig):
 
     svg = '<svg' + tmp.getvalue().split('<svg')[1]
 
-    svg = svg.replace(f'height="{h}pt"', '', 1)
-    svg = svg.replace(f'width="{w}pt"', 'width="100%"', 1)
+    svg = svg.replace(f'height="{h}pt"', 'height="100vmin"', 1)
+    svg = svg.replace(f'width="{w}pt"', 'width="auto"', 1)
 
     return svg
 
@@ -147,7 +147,7 @@ def main():
 
     fig, ax = plt.subplots(figsize=(6, 6))
 
-    ax.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=16)
+    ax.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=4)
     ax.plot(t[:, 1], t[:, 0], '+', color='k', markersize=8, label='Taps')
     ax.set_title(f"{name} optimised for " + str(len(taps)) + ' taps')
     ax.set_aspect('equal')
@@ -233,7 +233,7 @@ def main():
 # ****************************************************************************
 # *                                 Make html                                *
 # ****************************************************************************
-    percentage = 65
+    percentage = 50
     raw_html = f'''
     <!DOCTYPE html>
     <html>
@@ -246,14 +246,13 @@ def main():
     .center_svg {{
         display: block;
         margin-left: auto;
-        margin-right: auto;
-        width: {percentage}%;}}
+        margin-right: auto;}}
 
     .center_txt {{
         display: block;
         margin-left: auto;
         margin-right: auto;
-        width: {percentage}%;}}
+        width: 80vmin;}}
 
     h1{{font-size:50px;}}
     h2{{font-size:40px;}}
