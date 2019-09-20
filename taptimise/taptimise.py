@@ -51,6 +51,10 @@ def save_svg(fig):
     return svg
 
 
+def formatter(prog):
+    return argparse.HelpFormatter(prog, max_help_position=52)
+
+
 def main():
     custom_fig = Figlet(font='graffiti')
     print(custom_fig.renderText('Taptimise'))
@@ -63,27 +67,35 @@ def main():
 # *                              Parse Arguments                             *
 # ****************************************************************************
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=formatter)
+
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + __version__)
 
     parser.add_argument("path", help="path to house data")
     parser.add_argument('max_load', type=float,
                         help="maximum load a single tap can support")
+
     parser.add_argument('-n', '--num-taps', type=int, action='store',
-                        help="number of taps to start with")
+                        help="number of taps to start with",
+                        metavar='NUM')
     parser.add_argument("-m", "--max-distance", type=float, default=-1,
-                        help="maximum house-tap distance", action="store")
+                        help="maximum house-tap distance", action="store",
+                        metavar='DIST')
     parser.add_argument('-b', '--buffer-size', type=int, action='store',
-                        help='size of each houses internal buffer')
+                        help='size of each houses internal buffer',
+                        metavar='SIZE')
     parser.add_argument("-s", "--steps", action="store", type=int,
                         help="number of cooling steps per scale")
     parser.add_argument('--num-scales', action='store', type=int,
                         help='set number of scales')
+    parser.add_argument('-o', '--overload', action='store', type=float,
+                        help='Set the teleport overload threshold')
+
     parser.add_argument('--disable-auto', action='store_true',
                         help='disables auto rerun if house too far')
     parser.add_argument('--disable-debug', action='store_false',
                         help='save run data for debugging')
-    parser.add_argument('-v', '--version', action='version',
-                        version='%(prog)s ' + __version__)
 
     args = parser.parse_args()
 
@@ -113,7 +125,8 @@ def main():
                                                             debug=args.disable_debug,
                                                             multiscale=args.num_scales,
                                                             max_dist=args.max_distance,
-                                                            buff_size=args.buffer_size)
+                                                            buff_size=args.buffer_size,
+                                                            overvolt=args.overload)
         num_taps = len(taps) + 1
 
         print()
@@ -274,7 +287,12 @@ def main():
     <p> This report has been generated using Taptimise the tap positioning 
         Monte-Carlo-Annealing optimiser. For more information and bug reporting 
         visit <a href="https://github.com/ConorWilliams/taptimise">GitHub</a>.
-        Copyright 2019 C. J. Williams (CHURCHILL COLLEGE). </p>
+        </p>
+
+    <p> Copyright 2019 C. J. Williams (CHURCHILL COLLEGE). Taptimise is free 
+        (open-source) software with ABSOLUTELY NO WARRANTY, licensed under the 
+        MIT license</p>
+
     <p> The arguments & flags given to produce this report where: 
         "{' '.join(sys.argv[1:])}" running Taptimise version {__version__}. </p>
 

@@ -16,13 +16,16 @@ TELEPORT_MULTIPLYER = 0.25
 
 KB_AVERAGE_RUNS = 100
 LENGTH_SCALE_THRESHOLD = 0.5
-OVERVOALT = 1.2
+OVERVOALT_DEFAULT = 1.2
 
 
 def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
-             multiscale=None, max_dist=-1, buff_size=None):
+             multiscale=None, max_dist=-1, buff_size=None, overvolt=None):
     # finds optimal tap position for houses
     tot_demand = sum(h[2] for h in houses)
+
+    if overvolt is None:
+        overvolt = OVERVOALT_DEFAULT
 
     if num_taps is None:
         num_taps = int(math.ceil(tot_demand / max_load + 0.5))
@@ -34,9 +37,9 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     avg_frac_load = tot_demand / (num_taps * max_load)
 
     if steps is None:
-        steps = int(math.log(num_taps) * STEP_MULTIPLYER)
+        steps = int(math.log(num_taps) * STEP_MULTIPLYER + 1)
 
-    ztc_steps = int(steps / ZTC_MULTIPLYER)
+    ztc_steps = int(steps / ZTC_MULTIPLYER + 1)
 
     print('Running,', steps / num_taps, 'MCS per taps.')
 
@@ -69,8 +72,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     # main cooling
     debug_data = []
     for i in range(num_scales):
-        run_info = cool(houses, taps, steps, kB,
-                        debug=debug, order=num_scales - i)
+        run_info = cool(houses, taps, steps, kB, overvolt, debug=debug)
         kB = calc_kB(houses, taps)
         debug_data.append(run_info)
 
@@ -78,7 +80,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     print()
     print('Zero temperature optimisation:')
 
-    run_info = cool(houses, taps, ztc_steps, -1, debug=debug)
+    run_info = cool(houses, taps, ztc_steps, -1, overvolt, debug=debug)
     debug_data.append(run_info)
 
     h_out = [(h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist())
@@ -92,7 +94,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     return h_out, t_out, max_dist, debug_data, num_scales
 
 
-def cool(houses, taps, steps, kB, debug=False, order=1):
+def cool(houses, taps, steps, kB, overvolt, debug=False):
     # performs a round of cooling to optimise tap positions
     energy = 0
     for t in taps:
@@ -120,7 +122,7 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
 
         for h in houses:
             # teleport check
-            if kB > 0 and h.tap.load / h.tap.max_load > OVERVOALT:
+            if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
                 if random.random() < prob * temp:
                     energy += teleport(h, taps)
                     continue
