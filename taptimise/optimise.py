@@ -83,10 +83,10 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     run_info = cool(houses, taps, ztc_steps, -1, overvolt, debug=debug)
     debug_data.append(run_info)
 
-    h_out = [(h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist())
+    h_out = [[h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist()]
              for h in houses]
 
-    t_out = [(t.pos.real, t.pos.imag, i, round(t.load / t.max_load * 100))
+    t_out = [[t.pos.real, t.pos.imag, i, round(t.load / t.max_load * 100)]
              for i, t in enumerate(taps)]
 
     max_dist = max(out[3] for out in h_out)

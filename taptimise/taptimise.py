@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 from .__init__ import __version__
 from .optimise import optimise
 from .htmltable import to_html
+from .units import LocalXY
 
 WINDOW_SIZE = 11  # must be an odd number
 
@@ -108,18 +109,23 @@ def main():
 # *                             Run Optimisation                             *
 # ****************************************************************************
 
-    raw_houses = []
+    houses = []
 
     with open(path, newline='', encoding='utf-8-sig') as f:
         reader = csv.reader(f)
         for row in reader:
-            raw_houses.append([float(elem) for elem in row])
+            houses.append([float(elem) for elem in row])
+
+    convert = LocalXY(*houses[0][0:2])
+
+    for h in houses:
+        h[0], h[1] = convert.geo2enu(h[0], h[1])
 
     max_dist = args.max_distance + 1
     num_taps = args.num_taps
 
     while max_dist > args.max_distance:
-        houses, taps, max_dist, run_data, scales = optimise(raw_houses, args.max_load,
+        houses, taps, max_dist, run_data, scales = optimise(houses, args.max_load,
                                                             num_taps=num_taps,
                                                             steps=args.steps,
                                                             debug=args.disable_debug,
@@ -147,16 +153,16 @@ def main():
 
     fig, ax = plt.subplots(figsize=(6, 6))
 
-    ax.scatter(h[::, 1], h[::, 0], c=h[::, 2], cmap=cmap, label='Houses', s=4)
-    ax.plot(t[:, 1], t[:, 0], '+', color='k', markersize=8, label='Taps')
+    ax.scatter(h[::, 0], h[::, 1], c=h[::, 2], cmap=cmap, label='Houses', s=4)
+    ax.plot(t[:, 0], t[:, 1], '+', color='k', markersize=8, label='Taps')
     ax.set_title(f"{name} optimised for " + str(len(taps)) + ' taps')
     ax.set_aspect('equal')
 
     ax.set_ylabel('Latitude')
     ax.set_xlabel('Longitude')
 
-    xmin, xmax = h[::, 1].min(), h[::, 1].max()
-    ymin, ymax = h[::, 0].min(), h[::, 0].max()
+    xmin, xmax = h[::, 0].min(), h[::, 0].max()
+    ymin, ymax = h[::, 1].min(), h[::, 1].max()
 
     gap = max(xmax - xmin, ymax - ymin)
 
@@ -233,6 +239,13 @@ def main():
 # ****************************************************************************
 # *                                 Make html                                *
 # ****************************************************************************
+
+    for t in taps:
+        t[0], t[1] = convert.enu2geo(*t[:2])
+
+    for h in houses:
+        h[0], h[1] = convert.enu2geo(*h[:2])
+
     percentage = 50
     raw_html = f'''
     <!DOCTYPE html>

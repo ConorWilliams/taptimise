@@ -2,7 +2,6 @@
 
 import math
 import random
-import pymap3d
 
 DISTANCE_EXPONENT = 1
 OVERLOAD_EXPONENT = 2
@@ -73,6 +72,18 @@ class Tap():
         return self.energy - self.old_energy
 
 
+def bond_energy(tap, house):
+    rel = tap.pos - house.pos
+    rel = rel.real**2 + rel.imag**2
+
+    if house.max_sq_dist > 0 and rel > house.max_sq_dist:
+        rel *= ((rel / house.max_sq_dist) ** DISTANCE_EXPONENT)
+
+    rel *= house.demand
+
+    return rel
+
+
 class House():
     def __init__(self, x, y, demand, buff_size, max_sq_dist):
         self.pos = complex(x, y)
@@ -96,14 +107,7 @@ class House():
 
         self.tap = tap
 
-
-def bond_energy(tap, house):
-    rel = tap.pos - house.pos
-    rel = rel.real**2 + rel.imag**2
-
-    if house.max_sq_dist > 0 and rel > house.max_sq_dist:
-        rel *= ((rel / house.max_sq_dist) ** DISTANCE_EXPONENT)
-
-    rel *= house.demand
-
-    return rel
+    def dist(self):
+        rel = self.pos - self.tap.pos
+        rel = rel.real**2 + rel.imag**2
+        return math.sqrt(rel)
