@@ -188,14 +188,18 @@ def main():
             data = np.asarray(run)
             ind = np.arange(len(run))
 
+            data[::, 2:5:1] *= 100 / len(houses)
+
             ax.set_xlabel('Monte-Carlo Steps')
-            ax.set_ylabel('Counters')
+            ax.set_ylabel('Percentage Count')
             ax.set_title(f'Order = {order}')
+
             ax.plot(ind, smooth(data[::, 2]), label='favourable')
             ax.plot(ind, smooth(data[::, 3] + data[::, 2]),
                     label='unfavourable-accepted')
             ax.plot(ind, data[::, 4] + data[::, 2] +
                     data[::, 3], label='unfavourable-rejected')
+
             ax.set_xlim(ind[0], ind[-1])
             ax.set_ylim(bottom=0)
             ax.legend()

@@ -8,8 +8,9 @@ from tqdm import trange
 from .classes import Tap, House
 
 BUFFER_MULTIPLYER = 5
-STEP_MULTIPLYER = 2500
-ZTC_MULTIPLYER = int(STEP_MULTIPLYER / 10)
+STEP_MULTIPLYER = 2000
+ZTC_MULTIPLYER = 10
+
 TEMPERATURE_MULTIPLYER = 1
 TELEPORT_MULTIPLYER = 0.25
 
@@ -24,17 +25,20 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     tot_demand = sum(h[2] for h in houses)
 
     if num_taps is None:
-        num_taps = int(math.ceil(tot_demand / max_load))
+        num_taps = int(math.ceil(tot_demand / max_load + 0.5))
+    elif num_taps * max_load < tot_demand:
+        print('WARNING - Not enough taps to support village')
 
     print('Attempting to optimise', num_taps, 'taps.')
 
     avg_frac_load = tot_demand / (num_taps * max_load)
 
     if steps is None:
-        steps = int(math.sqrt(num_taps) * STEP_MULTIPLYER)
+        steps = int(math.log(num_taps) * STEP_MULTIPLYER)
 
-    print('Running,', steps / math.sqrt(num_taps),
-          'MCS per sqrt(number of taps).')
+    ztc_steps = int(steps / ZTC_MULTIPLYER)
+
+    print('Running,', steps / math.log(num_taps), 'MCS per log(number of taps).')
 
     if buff_size is None:
         buff_size = num_taps * BUFFER_MULTIPLYER
