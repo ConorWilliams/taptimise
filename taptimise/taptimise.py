@@ -274,7 +274,7 @@ def main():
     <p> This report has been generated using Taptimise the tap positioning 
         Monte-Carlo-Annealing optimiser. For more information and bug reporting 
         visit <a href="https://github.com/ConorWilliams/taptimise">GitHub</a>.
-        </p>
+        Copyright 2019 C. J. Williams (CHURCHILL COLLEGE). </p>
     <p> The arguments & flags given to produce this report where: 
         "{' '.join(sys.argv[1:])}" running Taptimise version {__version__}. </p>
 

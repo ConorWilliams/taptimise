@@ -38,7 +38,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
 
     ztc_steps = int(steps / ZTC_MULTIPLYER)
 
-    print('Running,', steps / math.log(num_taps), 'MCS per log(number of taps).')
+    print('Running,', steps / num_taps, 'MCS per taps.')
 
     if buff_size is None:
         buff_size = num_taps * BUFFER_MULTIPLYER
@@ -78,7 +78,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     print()
     print('Zero temperature optimisation:')
 
-    run_info = cool(houses, taps, num_taps * ZTC_MULTIPLYER, -1, debug=debug)
+    run_info = cool(houses, taps, ztc_steps, -1, debug=debug)
     debug_data.append(run_info)
 
     h_out = [(h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist())
