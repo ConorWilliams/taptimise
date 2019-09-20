@@ -89,11 +89,12 @@ class House():
         self.max_sq_dist = max_sq_dist
 
     def detach(self):
-        self.tap.houses.remove(self)
-        self.tap.vec_sum -= self.pos * self.demand
-        self.tap.load -= self.demand
+        if self.tap is not None:
+            self.tap.houses.remove(self)
+            self.tap.vec_sum -= self.pos * self.demand
+            self.tap.load -= self.demand
 
-        self.tap = None
+            self.tap = None
 
     def attach(self, tap):
         tap.houses.add(self)

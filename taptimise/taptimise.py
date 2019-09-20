@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 """taptimise.taptimise: provides entry point main()."""
 
 import argparse
@@ -192,11 +191,14 @@ def main():
             ax.set_xlabel('Monte-Carlo Steps')
             ax.set_ylabel('Counters')
             ax.set_title(f'Order = {order}')
-            ax.plot(ind, smooth(data[::, 2]))
-            ax.plot(ind, smooth(data[::, 3] + data[::, 2]))
-            ax.plot(ind, smooth(data[::, 4] + data[::, 2] + data[::, 3]))
+            ax.plot(ind, smooth(data[::, 2]), label='favourable')
+            ax.plot(ind, smooth(data[::, 3] + data[::, 2]),
+                    label='unfavourable-accepted')
+            ax.plot(ind, data[::, 4] + data[::, 2] +
+                    data[::, 3], label='unfavourable-rejected')
             ax.set_xlim(ind[0], ind[-1])
             ax.set_ylim(bottom=0)
+            ax.legend()
 
             ax2 = ax.twinx()
 

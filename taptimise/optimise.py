@@ -11,9 +11,11 @@ BUFFER_MULTIPLYER = 5
 STEP_MULTIPLYER = 2500
 ZTC_MULTIPLYER = int(STEP_MULTIPLYER / 10)
 TEMPERATURE_MULTIPLYER = 2
+TELEPORT_MULTIPLYER = 0.25
 
 KB_AVERAGE_RUNS = 100
 LENGTH_SCALE_THRESHOLD = 0.5
+OVERVOALT = 1.2
 
 
 def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
@@ -103,6 +105,8 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
 
         return data
 
+    prob = len(taps) / len(houses) * TELEPORT_MULTIPLYER
+
     for i in trange(steps, ascii=True):
         temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER * order
         random.shuffle(houses)
@@ -111,6 +115,12 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
             counters = [0, 0, 0]
 
         for h in houses:
+            # teleport check
+            if kB > 0 and h.tap.load / h.tap.max_load > OVERVOALT:
+                if random.random() < prob * i / steps:
+                    energy += teleport(h, taps)
+                    continue
+
             old_tap = h.tap
             new_tap = h.buff.rand()
 
@@ -160,6 +170,37 @@ def cool(houses, taps, steps, kB, debug=False, order=1):
         t.centralise()
 
     return data
+
+
+def teleport(h, taps):
+    min_tap = min(taps, key=lambda t: t.load)
+    old_tap = h.tap
+
+    other_houses = list(min_tap.houses)
+
+    for o in other_houses:
+
+        new = o.buff.data[o.buff.pos - 1]
+        count = 2
+        while new is min_tap:
+            new = o.buff.data[o.buff.pos - count]
+            count += 1
+
+            if count > o.buff.size - 1:
+                new = random.choice(taps)
+
+        o.detach()
+        o.attach(new)
+        o.buff.insert(new)
+
+    h.detach()
+    h.attach(min_tap)
+    h.buff.insert(min_tap)
+
+    old_tap.centralise()
+    min_tap.centralise()
+
+    return old_tap.score() + min_tap.score()
 
 
 def randomise(houses, taps):
