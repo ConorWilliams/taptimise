@@ -73,7 +73,6 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     debug_data = []
 
     run_info = cool(houses, taps, steps, kB, overvolt, num_scales, debug=debug)
-    kB = calc_kB(houses, taps)
     debug_data.append(run_info)
 
     # zero temp cooling
@@ -98,12 +97,13 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
 def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
     # performs a round of cooling to optimise tap positions
     energy = 0
+    temp = 1
+    data = []
+
     for t in taps:
         t.centralise()
         t.score()
         energy += t.energy
-
-    data = []
 
     # one tap edge case
     if len(taps) <= 1:
@@ -115,28 +115,38 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
     prob = len(taps) / len(houses) * TELEPORT_MULTIPLYER
     base = 10 ** -((scales + 2) / steps)
 
-    temp = 1
-
     for i in trange(steps * scales, ascii=True):
         temp = base * temp
+        # random.shuffle(houses)
 
-        random.shuffle(houses)
+        h_probs = []
+
+        emax = max(t.energy for t in taps)
+        emin = min(t.energy for t in taps)
+
+        for t in taps:
+            p = int((t.energy - emin) * 100 / (emax - emin) + 1)
+            for h in t.houses:
+                h_probs.extend(h for _ in range(p))
+
+        print([int((t.energy - emin) * 100 / (emax - emin) + 1) for t in taps])
 
         if debug:
             counters = [0, 0, 0]
 
-        for h in houses:
-            # Tunnelling attempt check
-            if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
-                if random.random() < prob * temp:
-                    energy += teleport(h, taps)
-                    continue
-
+        for _ in range(len(houses)):
+            h = random.choice(h_probs)
             old_tap = h.tap
             new_tap = h.buff.rand()
 
             while new_tap is old_tap:
                 new_tap = random.choice(taps)
+
+            # Tunnelling attempt check
+            if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
+                if random.random() < prob * temp:
+                    energy += teleport(h, taps)
+                    continue
 
             h.detach()
             h.attach(new_tap)

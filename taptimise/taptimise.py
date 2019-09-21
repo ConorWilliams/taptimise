@@ -224,7 +224,7 @@ def main():
             ax2 = ax.twinx()
 
             ax2.set_ylabel('Energy Fraction')
-            ax2.plot(ind, smooth(data[::, 1] / E0), color='k')
+            ax2.semilogy(ind, smooth(data[::, 1] / E0), color='k')
 
             fig.tight_layout()
 
