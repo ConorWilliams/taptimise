@@ -1,9 +1,9 @@
 import pymap3d as p3d
 
-# Shallow wrapper to pymap3d's local tangent plane coordinate transforms
-
 
 class LocalXY():
+    # Shallow wrapper to pymap3d's local tangent plane coordinate transforms
+
     def __init__(self, lat0, lon0):
         self.lat0 = lat0
         self.lon0 = lon0

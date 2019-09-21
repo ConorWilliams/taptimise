@@ -12,7 +12,7 @@ def row(elems):
     out = []
     for elem in elems:
         if type(elem) is float:
-            out.append(f'<td>{round(elem, 5):>09}</td>')
+            out.append(f'<td>{round(elem, 5)}</td>')
         else:
             out.append(f'<td>{elem}</td>')
 

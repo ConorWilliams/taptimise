@@ -7,6 +7,7 @@ import csv
 import os
 import io
 import sys
+from decimal import Decimal
 
 import numpy as np
 from pyfiglet import Figlet
@@ -17,7 +18,7 @@ from .optimise import optimise
 from .htmltable import to_html
 from .units import LocalXY
 
-WINDOW_SIZE = 11  # must be an odd number
+WINDOW_SIZE = 5  # must be an odd number
 
 
 def smooth(a, WSZ=WINDOW_SIZE):
@@ -91,7 +92,7 @@ def main():
     parser.add_argument('--num-scales', action='store', type=int,
                         help='set number of scales')
     parser.add_argument('-o', '--overload', action='store', type=float,
-                        help='Set the teleport overload threshold')
+                        help='Set the quantum tunnel overload threshold')
 
     parser.add_argument('--disable-auto', action='store_true',
                         help='disables auto rerun if house too far')
@@ -109,23 +110,23 @@ def main():
 # *                             Run Optimisation                             *
 # ****************************************************************************
 
-    houses = []
+    raw_houses = []
 
     with open(path, newline='', encoding='utf-8-sig') as f:
         reader = csv.reader(f)
         for row in reader:
-            houses.append([float(elem) for elem in row])
+            raw_houses.append([float(elem) for elem in row])
 
-    convert = LocalXY(*houses[0][0:2])
+    convert = LocalXY(*raw_houses[0][0:2])
 
-    for h in houses:
+    for h in raw_houses:
         h[0], h[1] = convert.geo2enu(h[0], h[1])
 
     max_dist = args.max_distance + 1
     num_taps = args.num_taps
 
     while max_dist > args.max_distance:
-        houses, taps, max_dist, run_data, scales = optimise(houses, args.max_load,
+        houses, taps, max_dist, run_data, scales = optimise(raw_houses, args.max_load,
                                                             num_taps=num_taps,
                                                             steps=args.steps,
                                                             debug=args.disable_debug,
@@ -231,7 +232,7 @@ def main():
 
             debug_svg.append(svg)
 
-        print('Total final energy is: ', run_data[-1][-1][1])
+        print('Total final energy is: ', f"{Decimal(run_data[-1][-1][1]):.2E}")
 
     print('The biggest walk is:', max_dist)
     print('Percentage loads:', ', '.join(str(tap[3]) for tap in taps))
