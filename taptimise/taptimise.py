@@ -7,6 +7,7 @@ import csv
 import os
 import io
 import sys
+from decimal import Decimal
 
 import numpy as np
 from pyfiglet import Figlet
@@ -91,7 +92,7 @@ def main():
     parser.add_argument('--num-scales', action='store', type=int,
                         help='set number of scales')
     parser.add_argument('-o', '--overload', action='store', type=float,
-                        help='Set the teleport overload threshold')
+                        help='Set the quantum tunnel overload threshold')
 
     parser.add_argument('--disable-auto', action='store_true',
                         help='disables auto rerun if house too far')
@@ -231,7 +232,7 @@ def main():
 
             debug_svg.append(svg)
 
-        print('Total final energy is: ', run_data[-1][-1][1])
+        print('Total final energy is: ', f"{Decimal(run_data[-1][-1][1]):.2E}")
 
     print('The biggest walk is:', max_dist)
     print('Percentage loads:', ', '.join(str(tap[3]) for tap in taps))
