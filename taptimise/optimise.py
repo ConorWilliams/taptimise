@@ -113,8 +113,12 @@ def cool(houses, taps, steps, kB, overvolt, debug=False):
 
     prob = len(taps) / len(houses) * TELEPORT_MULTIPLYER
 
+    temp = 1
+
     for i in trange(steps, ascii=True):
-        temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER
+        #temp = (1 - i / steps) * TEMPERATURE_MULTIPLYER
+        temp = 0.93 * temp + 0.00001
+        print(temp)
 
         random.shuffle(houses)
 
