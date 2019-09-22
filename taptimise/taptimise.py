@@ -89,7 +89,7 @@ def main():
                         metavar='SIZE')
     parser.add_argument("-s", "--steps", action="store", type=int,
                         help="number of cooling steps per scale")
-    parser.add_argument('--num-scales', action='store', type=int,
+    parser.add_argument('--scales', action='store', type=int,
                         help='set number of scales')
     parser.add_argument('-o', '--overload', action='store', type=float,
                         help='Set the quantum tunnel overload threshold')
@@ -130,7 +130,7 @@ def main():
                                                             num_taps=num_taps,
                                                             steps=args.steps,
                                                             debug=args.disable_debug,
-                                                            multiscale=args.num_scales,
+                                                            multiscale=args.scales,
                                                             max_dist=args.max_distance,
                                                             buff_size=args.buffer_size,
                                                             overvolt=args.overload)
@@ -156,7 +156,8 @@ def main():
 
     ax.scatter(h[::, 0], h[::, 1], c=h[::, 2], cmap=cmap, label='Houses', s=4)
     ax.plot(t[:, 0], t[:, 1], '+', color='k', markersize=8, label='Taps')
-    ax.set_title(f"{name} optimised for " + str(len(taps)) + ' taps')
+
+    ax.set_title(f"{name.upper()} - {len(taps)} Taps")
     ax.set_aspect('equal')
 
     ax.set_ylabel('Latitude')
@@ -205,17 +206,26 @@ def main():
             data = np.asarray(run)
             ind = np.arange(len(run))
 
-            data[::, 2:5:1] *= 100 / len(houses)
+            counts = data[::, 2:5:1] * 100 / len(houses)
+
+            counts[::, 1] += counts[::, 0]
+            counts[::, 2] += counts[::, 1]
+
+            counts[::, 0] = smooth(counts[::, 0])
+            counts[::, 1] = smooth(counts[::, 1])
 
             ax.set_xlabel('Monte-Carlo Steps')
             ax.set_ylabel('Percentage Count')
             ax.set_title(f'Order = {order}')
 
-            ax.plot(ind, smooth(data[::, 2]), label='favourable')
-            ax.plot(ind, smooth(data[::, 3] + data[::, 2]),
-                    label='unfavourable-accepted')
-            ax.plot(ind, data[::, 4] + data[::, 2] +
-                    data[::, 3], label='unfavourable-rejected')
+            ax.fill_between(
+                ind, counts[::, 0], label='Favourable', color='mediumseagreen')
+            ax.fill_between(
+                ind, counts[::, 0], counts[::, 1], label='Unfavourable-accepted', color='indianred')
+            ax.fill_between(
+                ind, counts[::, 1], counts[::, 2], label='Unfavourable-rejected', color='steelblue')
+            ax.fill_between(
+                ind, counts[::, 2], 100, label='Quantum-tunnel', color='orchid')
 
             ax.set_xlim(ind[0], ind[-1])
             ax.set_ylim(bottom=0)
@@ -224,7 +234,7 @@ def main():
             ax2 = ax.twinx()
 
             ax2.set_ylabel('Energy Fraction')
-            ax2.plot(ind, smooth(data[::, 1] / E0), color='k')
+            ax2.semilogy(ind, smooth(data[::, 1] / E0), color='k')
 
             fig.tight_layout()
 
@@ -255,7 +265,7 @@ def main():
     <html>
 
     <head>
-    <title> Taptimise {name} Report </title>
+    <title> Taptimise {name.upper()} Report </title>
     </head>
 
     <style>
@@ -297,7 +307,7 @@ def main():
 
     <div class="center_txt">
 
-    <h1 align="center">Taptimise Report - Village: {name}</h1>
+    <h1 align="center">Taptimise Report - Village: {name.upper()}</h1>
 
     <p> This report has been generated using Taptimise the tap positioning 
         Monte-Carlo-Annealing optimiser. For more information and bug reporting 
