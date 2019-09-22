@@ -38,6 +38,8 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
 
     if steps is None:
         steps = int(num_taps * STEP_MULTIPLYER)
+    else:
+        steps = int(num_taps * steps)
 
     ztc_steps = int(steps / ZTC_MULTIPLYER)
 

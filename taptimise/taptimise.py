@@ -88,7 +88,7 @@ def main():
                         help='size of each houses internal buffer',
                         metavar='SIZE')
     parser.add_argument("-s", "--steps", action="store", type=int,
-                        help="number of cooling steps per scale")
+                        help="number of cooling steps per scale per tap")
     parser.add_argument('--scales', action='store', type=int,
                         help='set number of scales')
     parser.add_argument('-o', '--overload', action='store', type=float,

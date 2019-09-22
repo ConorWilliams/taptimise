@@ -38,7 +38,7 @@ Taptimise can accept several command line flags to tweak the optimisation.
 *  `-n NUM`, --num-taps `NUM` number of taps to attempt to place. Defaults to the minimum required to supply enough water to the village.
 *  `-m DIST`, `--max-distance DIST`, maximum house-tap separation. Defaults to infinity.
 *  `-b SIZE`, `--buffer-size SIZE` size of each houses internal buffer. Defaults to a multiple (5x) of the number of taps.
-*  `-s STEPS`, `--steps STEPS`, number of cooling steps per scale. Defaults to a multiple of the square root of the number of taps.
+*  `-s STEPS`, `--steps STEPS`, number of cooling steps per scale per tap.
 * `--scales NUM_SCALES`, set the number of length scales in the problem. Defaults to automatic detection.
 * `-o OVERLOAD`, `--overload OVERLOAD`, set the overload fraction to enable tap-quantum-tunnelling. 
 * `--disable-auto`, disables auto rerun if biggest house-tap separation is greater than MAX_DISTANCE.

@@ -60,11 +60,10 @@ class Tap():
         for h in self.houses:
             self.energy += bond_energy(self, h)
 
+        # self.energy *= (1 + abs(self.load - self.exp_load) / self.exp_load)
+
         if self.load > self.exp_load:
             self.energy *= (self.load / self.exp_load) ** EXPECTATION_EXPONENT
-
-        # if self.load > self.max_load:
-        #     self.energy *= (self.load / self.max_load) ** OVERLOAD_EXPONENT
 
         if self.load > self.max_load:
             self.energy *= (OVERLOAD_BASE ** (self.load / self.max_load - 1))
