@@ -130,7 +130,6 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
         emax = max(t.energy for t in taps)
 
         for _ in range(len(houses)):
-
             # rejection sampling to choose a house connected to a tap with a
             # probability proportional to the taps energy
             flag = True
@@ -146,9 +145,19 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
             # picks a new tap from buffer i.e more likely to be a near by tap
             new_tap = h.buff.rand()
 
-            # if new tap is current tap choose a random tap
+            # if new tap is current tap choose pick another tap using rejection
+            # sampling such that probability of picking new tap is proportional
+            # to 1 - tap.energy
             while new_tap is old_tap:
-                new_tap = random.choice(taps)
+                flag = True
+                count = 0
+                while flag:
+                    count += 1
+                    new_tap = taps[int(random.random() * num_taps)]
+                    p = new_tap.energy / emax
+
+                    if random.random() > p or count > num_taps:
+                        flag = False
 
             # quantum tunnel if tap is overloaded
             if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
