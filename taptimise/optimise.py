@@ -145,6 +145,8 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 
             # picks a new tap from buffer i.e more likely to be a near by tap
             new_tap = h.buff.rand()
+
+            # if new tap is current tap choose a random tap
             while new_tap is old_tap:
                 new_tap = random.choice(taps)
 
