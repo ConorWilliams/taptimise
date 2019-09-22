@@ -58,9 +58,17 @@ class Tap():
         self.energy = 0
 
         for h in self.houses:
-            self.energy += bond_energy(self, h)
+            rel = h.pos - self.pos
+            rel = rel.real**2 + rel.imag**2
 
-        # self.energy *= (1 + abs(self.load - self.exp_load) / self.exp_load)
+            if h.max_sq_dist > 0 and rel > h.max_sq_dist:
+                rel *= ((rel / h.max_sq_dist) ** DISTANCE_EXPONENT)
+
+            rel *= h.demand
+
+            self.energy += rel
+
+        #self.energy *= (1 + abs(self.load - self.exp_load) / self.exp_load)
 
         if self.load > self.exp_load:
             self.energy *= (self.load / self.exp_load) ** EXPECTATION_EXPONENT
@@ -69,18 +77,6 @@ class Tap():
             self.energy *= (OVERLOAD_BASE ** (self.load / self.max_load - 1))
 
         return self.energy - self.old_energy
-
-
-def bond_energy(tap, house):
-    rel = tap.pos - house.pos
-    rel = rel.real**2 + rel.imag**2
-
-    if house.max_sq_dist > 0 and rel > house.max_sq_dist:
-        rel *= ((rel / house.max_sq_dist) ** DISTANCE_EXPONENT)
-
-    rel *= house.demand
-
-    return rel
 
 
 class House():
