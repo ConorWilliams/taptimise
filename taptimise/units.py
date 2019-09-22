@@ -2,7 +2,9 @@ import pymap3d as p3d
 
 
 class LocalXY():
-    # Shallow wrapper to pymap3d's local tangent plane coordinate transforms
+    # Shallow wrapper to pymap3d's local tangent plane coordinate transforms.
+    # This is required to correct for the curvature of the Earth distorting 
+    # lat, long away from the equator.
 
     def __init__(self, lat0, lon0):
         self.lat0 = lat0

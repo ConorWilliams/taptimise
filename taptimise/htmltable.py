@@ -1,3 +1,5 @@
+# functions to convert iterable of iterables to html table
+
 def head(elems):
     out = []
     for elem in elems:

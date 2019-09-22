@@ -49,7 +49,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
         buff_size = num_taps * BUFFER_MULTIPLYER
 
     if max_dist < 0:
-        max_sq_dist = -max_dist**2
+        max_sq_dist = -1
     else:
         max_sq_dist = max_dist**2
 
@@ -121,15 +121,18 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 
     for i in trange(steps * scales, ascii=True):
         temp = base * temp
-        # random.shuffle(houses)
 
         if debug:
             counters = [0, 0, 0]
 
+        # for rejection sampling, does not matter that it is not updated every
+        # house as worst case all taps become equally likely
         emax = max(t.energy for t in taps)
 
         for _ in range(len(houses)):
 
+            # rejection sampling to choose a house connected to a tap with a
+            # probability proportional to the taps energy
             flag = True
             while flag:
                 old_tap = taps[int(random.random() * num_taps)]
@@ -140,17 +143,18 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                     h = tuple(old_tap.houses)[j]
                     flag = False
 
+            # picks a new tap from buffer i.e more likely to be a near by tap
             new_tap = h.buff.rand()
-
             while new_tap is old_tap:
                 new_tap = random.choice(taps)
 
-            # Tunnelling attempt check
+            # quantum tunnel if tap is overloaded
             if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
                 if random.random() < prob * (1 - i / steps):
                     energy += qtunnel(h, taps)
                     continue
 
+            # move house to new tap
             h.detach()
             h.attach(new_tap)
 
@@ -160,7 +164,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
             delta_E = old_tap.score() + new_tap.score()
 
             if delta_E < 0:
-                # accept favourable
+                # accept favourable move
                 if debug:
                     counters[0] += 1
 
@@ -168,7 +172,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 h.buff.insert(new_tap)
 
             elif kB > 0 and random.random() < math.exp(-delta_E / (kB * temp)):
-                # accept unfavourable
+                # accept unfavourable move
                 if debug:
                     counters[1] += 1
 
@@ -176,7 +180,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 h.buff.insert(new_tap)
 
             else:
-                # reject unfavourable
+                # reject unfavourable move
                 if debug:
                     counters[2] += 1
 
@@ -200,6 +204,10 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 
 
 def qtunnel(h, taps):
+    # detaches h from tap and moves lowest scoring tap to h
+    # reattaches lowest scoring taps other houses
+    # clears buffers of all houses involved
+
     min_tap = min(taps, key=lambda t: t.load)
     old_tap = h.tap
 
@@ -258,6 +266,7 @@ def randomise(houses, taps):
 
 def get_grid(houses):
     # returns a tuple of coordinates bounding houses in a square box
+
     x = [h.pos.real for h in houses]
     y = [h.pos.imag for h in houses]
 
@@ -271,6 +280,7 @@ def get_grid(houses):
 
 def calc_kB(houses, taps):
     # computes the expectation energy of current bonds
+
     energy = 0
     for tap in taps:
         tap.score()
@@ -320,6 +330,7 @@ def calc_scales(houses):
 
 def find_tap_index(house, taps):
     # finds index of house's tap in taps
+
     for c, tap in enumerate(taps):
         if tap is house.tap:
             return c

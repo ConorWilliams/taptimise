@@ -10,6 +10,7 @@ EXPECTATION_EXPONENT = 2
 
 
 class Buffer():
+    # Basic circular buffer overwrites on wrap-around
     def __init__(self, size):
         self.size = size
         self.pos = 0
@@ -49,18 +50,22 @@ class Tap():
         self.houses = set()
 
     def centralise(self):
+        # set position to centroid
         if self.load == 0:
             return
         self.pos = self.vec_sum / self.load
 
     def score(self):
+        # calculates taps total energy
         self.old_energy = self.energy
         self.energy = 0
 
+        # sums all bond-energies
         for h in self.houses:
             rel = h.pos - self.pos
             rel = rel.real**2 + rel.imag**2
 
+            # penalise bonds longer than max walking distance
             if h.max_sq_dist > 0 and rel > h.max_sq_dist:
                 rel *= ((rel / h.max_sq_dist) ** DISTANCE_EXPONENT)
 
@@ -68,11 +73,11 @@ class Tap():
 
             self.energy += rel
 
-        #self.energy *= (1 + abs(self.load - self.exp_load) / self.exp_load)
-
+        # penalise loads greater than mean/expectation load
         if self.load > self.exp_load:
             self.energy *= (self.load / self.exp_load) ** EXPECTATION_EXPONENT
 
+        # penalise loads over maximum load exponentially
         if self.load > self.max_load:
             self.energy *= (OVERLOAD_BASE ** (self.load / self.max_load - 1))
 
@@ -88,6 +93,7 @@ class House():
         self.max_sq_dist = max_sq_dist
 
     def detach(self):
+        # remove all traces from tap connection and disconnect
         if self.tap is not None:
             self.tap.houses.remove(self)
             self.tap.vec_sum -= self.pos * self.demand
@@ -96,6 +102,7 @@ class House():
             self.tap = None
 
     def attach(self, tap):
+        # attach to a new tap updating it
         tap.houses.add(self)
         tap.vec_sum += self.pos * self.demand
         tap.load += self.demand

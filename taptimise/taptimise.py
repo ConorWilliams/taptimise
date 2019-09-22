@@ -35,6 +35,7 @@ def smooth(a, WSZ=WINDOW_SIZE):
 
 
 def save_svg(fig):
+    # saves a matplotlib figure object to an html embeddable svg string
     w, h = fig.get_size_inches()
     w, h = round(w + 0.5), round(h + 0.5)
 
