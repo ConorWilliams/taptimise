@@ -43,6 +43,9 @@ Taptimise can accept several command line flags to tweak the optimisation.
 * `-o OVERLOAD`, `--overload OVERLOAD`, set the overload fraction to enable tap-quantum-tunnelling. 
 * `--disable-auto`, disables auto rerun if biggest house-tap separation is greater than MAX_DISTANCE.
 * `--disable-debug`, disable saving run/debug data.
+* `--csv`, writes the optimised tap locations to a csv file as well as the html report
+* `--scribble SCRIBBLE`, lets Taptimise read www.scribblemaps.com native csv output, argument is the house demand
+
 
 Setting a maximum separation with `-m` will trigger automatic reruns each using more taps until a solution is found.
 

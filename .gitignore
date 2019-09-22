@@ -2,6 +2,7 @@
 test/*.html
 test/*.png
 test/*.pdf
+test/*taps.csv
 
 
 
