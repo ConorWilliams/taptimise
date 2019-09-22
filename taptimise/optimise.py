@@ -7,12 +7,12 @@ from tqdm import trange
 
 from .classes import Tap, House
 
-BUFFER_MULTIPLYER = 5
+BUFFER_MULTIPLYER = 3
 STEP_MULTIPLYER = 100
 ZTC_MULTIPLYER = 10
 
 TEMPERATURE_MULTIPLYER = 1
-TELEPORT_MULTIPLYER = 0.25
+TELEPORT_MULTIPLYER = 0.5
 
 KB_AVERAGE_RUNS = 100
 LENGTH_SCALE_THRESHOLD = 0.5
@@ -28,7 +28,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
         overvolt = OVERVOALT_DEFAULT
 
     if num_taps is None:
-        num_taps = int(math.ceil(tot_demand / max_load + 0.5))
+        num_taps = int(math.ceil(tot_demand * 1.05 / max_load + 0.5))
     elif num_taps * max_load < tot_demand:
         print('WARNING - Not enough taps to support village')
 
@@ -115,28 +115,29 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
     prob = len(taps) / len(houses) * TELEPORT_MULTIPLYER
     base = 10 ** -((scales + 2) / steps)
 
+    num_taps = len(taps)
+
     for i in trange(steps * scales, ascii=True):
         temp = base * temp
         # random.shuffle(houses)
 
-        h_probs = []
-
-        emax = max(t.energy for t in taps)
-        emin = min(t.energy for t in taps)
-
-        for t in taps:
-            p = int((t.energy - emin) * 100 / (emax - emin) + 1)
-            for h in t.houses:
-                h_probs.extend(h for _ in range(p))
-
-        print([int((t.energy - emin) * 100 / (emax - emin) + 1) for t in taps])
-
         if debug:
             counters = [0, 0, 0]
 
+        emax = max(t.energy for t in taps)
+
         for _ in range(len(houses)):
-            h = random.choice(h_probs)
-            old_tap = h.tap
+
+            flag = True
+            while flag:
+                old_tap = taps[int(random.random() * num_taps)]
+                p = old_tap.energy / emax
+
+                if random.random() < p:
+                    j = int(random.random() * len(old_tap.houses))
+                    h = tuple(old_tap.houses)[j]
+                    flag = False
+
             new_tap = h.buff.rand()
 
             while new_tap is old_tap:
@@ -144,8 +145,8 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 
             # Tunnelling attempt check
             if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
-                if random.random() < prob * temp:
-                    energy += teleport(h, taps)
+                if random.random() < prob * (1 - i / steps):
+                    energy += qtunnel(h, taps)
                     continue
 
             h.detach()
@@ -157,6 +158,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
             delta_E = old_tap.score() + new_tap.score()
 
             if delta_E < 0:
+                # accept favourable
                 if debug:
                     counters[0] += 1
 
@@ -164,6 +166,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 h.buff.insert(new_tap)
 
             elif kB > 0 and random.random() < math.exp(-delta_E / (kB * temp)):
+                # accept unfavourable
                 if debug:
                     counters[1] += 1
 
@@ -171,6 +174,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 h.buff.insert(new_tap)
 
             else:
+                # reject unfavourable
                 if debug:
                     counters[2] += 1
 
@@ -193,11 +197,11 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
     return data
 
 
-def teleport(h, taps):
+def qtunnel(h, taps):
     min_tap = min(taps, key=lambda t: t.load)
     old_tap = h.tap
 
-    other_houses = list(min_tap.houses)
+    other_houses = tuple(min_tap.houses)
 
     for o in other_houses:
 
@@ -218,6 +222,8 @@ def teleport(h, taps):
 
     h.detach()
     h.attach(min_tap)
+
+    h.buff.clear()
     h.buff.insert(min_tap)
 
     old_tap.centralise()
