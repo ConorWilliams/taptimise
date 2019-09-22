@@ -290,7 +290,7 @@ def calc_scales(houses):
                 rel = h.pos - o.pos
                 rel = rel.real**2 + rel.imag**2
                 if math.isclose(0, rel, rel_tol=1e-09, abs_tol=0.0):
-                    print('WARNING - two houses very close')
+                    print('WARNING - two houses very close:', rel)
                 else:
                     dists.append(math.sqrt(rel))
 

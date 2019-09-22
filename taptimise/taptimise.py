@@ -120,8 +120,9 @@ def main():
         if args.scribble is not None:
             for row in reader:
                 try:
-                    raw_houses.append(
-                        [float(row[4]), float(row[5]), float(args.scribble)])
+                    if row[0] == 'Marker':
+                        raw_houses.append(
+                            [float(row[4]), float(row[5]), float(args.scribble)])
                 except:
                     print('Can\'t read', row)
         else:
@@ -272,6 +273,8 @@ def main():
     for h in houses:
         h[0], h[1], h[3] = *convert.enu2geo(h[0], h[1]), int(h[3])
         h[0], h[1] = float(h[0]), float(h[1])
+
+    houses.sort(key=lambda x: x[2])
 
     if args.csv:
         with open(f"{path[:-4]}_taps.csv", "w") as f:
