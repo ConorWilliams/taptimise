@@ -89,7 +89,7 @@ def main():
                         metavar='SIZE')
     parser.add_argument("-s", "--steps", action="store", type=int,
                         help="number of cooling steps per scale")
-    parser.add_argument('--num-scales', action='store', type=int,
+    parser.add_argument('--scales', action='store', type=int,
                         help='set number of scales')
     parser.add_argument('-o', '--overload', action='store', type=float,
                         help='Set the quantum tunnel overload threshold')
@@ -130,7 +130,7 @@ def main():
                                                             num_taps=num_taps,
                                                             steps=args.steps,
                                                             debug=args.disable_debug,
-                                                            multiscale=args.num_scales,
+                                                            multiscale=args.scales,
                                                             max_dist=args.max_distance,
                                                             buff_size=args.buffer_size,
                                                             overvolt=args.overload)

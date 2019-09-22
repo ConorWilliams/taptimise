@@ -39,7 +39,7 @@ Taptimise can accept several command line flags to tweak the optimisation.
 *  `-m DIST`, `--max-distance DIST`, maximum house-tap separation. Defaults to infinity.
 *  `-b SIZE`, `--buffer-size SIZE` size of each houses internal buffer. Defaults to a multiple (5x) of the number of taps.
 *  `-s STEPS`, `--steps STEPS`, number of cooling steps per scale. Defaults to a multiple of the square root of the number of taps.
-* `--num-scales NUM_SCALES`, set the number of length scales in the problem. Defaults to automatic detection.
+* `--scales NUM_SCALES`, set the number of length scales in the problem. Defaults to automatic detection.
 * `-o OVERLOAD`, `--overload OVERLOAD`, set the overload fraction to enable tap-quantum-tunnelling. 
 * `--disable-auto`, disables auto rerun if biggest house-tap separation is greater than MAX_DISTANCE.
 * `--disable-debug`, disable saving run/debug data.
