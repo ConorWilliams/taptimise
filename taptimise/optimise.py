@@ -156,8 +156,12 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                     new_tap = taps[int(random.random() * num_taps)]
                     p = new_tap.energy / emax
 
-                    if random.random() > p or count > num_taps:
+                    if random.random() > p:
                         flag = False
+
+                    if count > num_taps:
+                        flag = False
+                        new_tap = random.choice(taps)
 
             # quantum tunnel if tap is overloaded
             if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
