@@ -28,7 +28,7 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
         overvolt = OVERVOALT_DEFAULT
 
     if num_taps is None:
-        num_taps = int(math.ceil(tot_demand * 1.05 / max_load + 0.5))
+        num_taps = int(math.ceil(tot_demand * 1.05 / max_load))
     elif num_taps * max_load < tot_demand:
         print('WARNING - Not enough taps to support village')
 
@@ -156,7 +156,11 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                     new_tap = taps[int(random.random() * num_taps)]
                     p = new_tap.energy / emax
 
-                    if random.random() > p or count > num_taps:
+                    if random.random() > p:
+                        flag = False
+
+                    if count > num_taps:
+                        new_tap = random.choice(taps)
                         flag = False
 
             # quantum tunnel if tap is overloaded

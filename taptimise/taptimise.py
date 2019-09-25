@@ -17,6 +17,7 @@ from .__init__ import __version__
 from .optimise import optimise
 from .htmltable import to_html
 from .units import LocalXY
+from .meanshift import partition
 
 WINDOW_SIZE = 5  # must be an odd number
 
@@ -94,6 +95,7 @@ def main():
                         help='set number of scales')
     parser.add_argument('-o', '--overload', action='store', type=float,
                         help='Set the quantum tunnel overload threshold')
+    parser.add_argument('--batch', action='store', type=int, default=1)
     parser.add_argument('--csv', action='store_true',
                         help='write results to a .csv file')
     parser.add_argument('--scribble', action='store',
@@ -141,21 +143,36 @@ def main():
     max_dist = args.max_distance + 1
     num_taps = args.num_taps
 
-    while max_dist > args.max_distance:
-        houses, taps, max_dist, run_data, scales = optimise(raw_houses, args.max_load,
-                                                            num_taps=num_taps,
-                                                            steps=args.steps,
-                                                            debug=args.disable_debug,
-                                                            multiscale=args.scales,
-                                                            max_dist=args.max_distance,
-                                                            buff_size=args.buffer_size,
-                                                            overvolt=args.overload)
-        num_taps = len(taps) + 1
+    batches = partition(raw_houses, args.batch)
+    houses = []
+    taps = []
 
-        print()
+    for l, b in enumerate(batches):
+        while max_dist > args.max_distance:
+            h_tmp, t_tmp, max_dist, run_data, scales = optimise(b, args.max_load,
+                                                                num_taps=num_taps,
+                                                                steps=args.steps,
+                                                                debug=args.disable_debug,
+                                                                multiscale=args.scales,
+                                                                max_dist=args.max_distance,
+                                                                buff_size=args.buffer_size,
+                                                                overvolt=args.overload)
+            num_taps = len(t_tmp) + 1
 
-        if args.disable_auto or args.max_distance < 0:
-            break
+            print()
+
+            if args.disable_auto or args.max_distance < 0:
+                break
+
+        if l > 0:
+            for h in h_tmp:
+                h[2] += len(taps)
+            for t in t_tmp:
+                t[2] += len(taps)
+
+        num_taps = args.num_taps
+        houses.extend(h_tmp)
+        taps.extend(t_tmp)
 
 # ****************************************************************************
 # *                               Plot Village                               *
