@@ -8,6 +8,7 @@ import os
 import io
 import sys
 from decimal import Decimal
+import random
 
 import numpy as np
 from pyfiglet import Figlet
@@ -143,9 +144,17 @@ def main():
     max_dist = args.max_distance + 1
     num_taps = args.num_taps
 
+    tot = sum(h[2] for h in raw_houses)
+    batch = round(tot / (5 * args.max_load))
+
+    if batch == 0:
+        batch = 1
+
     batches = partition(raw_houses, args.batch)
     houses = []
     taps = []
+
+    print('DOIING', len(batches), 'BATCHES')
 
     for l, b in enumerate(batches):
         while max_dist > args.max_distance:
@@ -173,6 +182,9 @@ def main():
         num_taps = args.num_taps
         houses.extend(h_tmp)
         taps.extend(t_tmp)
+
+    random.shuffle(houses)
+    random.shuffle(taps)
 
 # ****************************************************************************
 # *                               Plot Village                               *
@@ -215,6 +227,8 @@ def main():
     fig.tight_layout()
 
     map_svg = save_svg(fig)
+
+    plt.show()
 
 
 # ****************************************************************************
