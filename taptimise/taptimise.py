@@ -9,6 +9,7 @@ import io
 import sys
 from decimal import Decimal
 import random
+import math
 
 import numpy as np
 from pyfiglet import Figlet
@@ -145,12 +146,21 @@ def main():
     num_taps = args.num_taps
 
     tot = sum(h[2] for h in raw_houses)
-    batch = round(tot / (5 * args.max_load))
+    num_batches = math.ceil(tot * 1.1 / args.max_load)
 
-    if batch == 0:
-        batch = 1
+    while True:
 
-    batches = partition(raw_houses, args.batch)
+        batches = partition(raw_houses, num_batches)
+        s = 0
+        for b in batches:
+            s += math.ceil(sum(h[2] for h in b) / args.max_load)
+
+        if num_batches == 1 or s <= math.ceil(tot * 1.05 / args.max_load + 0.5):
+            break
+        else:
+            print(f'failed {num_batches} kmeans')
+            num_batches -= 1
+
     houses = []
     taps = []
 
