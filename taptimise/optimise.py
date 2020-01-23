@@ -19,8 +19,15 @@ LENGTH_SCALE_THRESHOLD = 0.5
 OVERVOALT_DEFAULT = 1.2
 
 
-def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
-             multiscale=None, max_dist=-1, buff_size=None, overvolt=None):
+def optimise(houses,
+             max_load,
+             num_taps=None,
+             steps=None,
+             debug=False,
+             multiscale=None,
+             max_dist=-1,
+             buff_size=None,
+             overvolt=None):
     # finds optimal tap position for houses
     tot_demand = sum(h[2] for h in houses)
 
@@ -81,15 +88,21 @@ def optimise(houses, max_load, num_taps=None, steps=None, debug=False,
     print()
     print('Zero temperature optimisation:')
 
-    run_info = cool(houses, taps, ztc_steps, -1,
-                    overvolt, num_scales, debug=debug)
+    run_info = cool(houses,
+                    taps,
+                    ztc_steps,
+                    -1,
+                    overvolt,
+                    num_scales,
+                    debug=debug)
     debug_data.append(run_info)
 
-    h_out = [[h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist()]
-             for h in houses]
+    h_out = [[h.pos.real, h.pos.imag,
+              find_tap_index(h, taps),
+              h.dist()] for h in houses]
 
-    t_out = [[t.pos.real, t.pos.imag, i, round(t.load / t.max_load * 100)]
-             for i, t in enumerate(taps)]
+    t_out = [[t.pos.real, t.pos.imag, i,
+              round(t.load / t.max_load * 100)] for i, t in enumerate(taps)]
 
     max_dist = max(out[3] for out in h_out)
 
@@ -115,7 +128,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
         return data
 
     prob = len(taps) / len(houses) * TELEPORT_MULTIPLYER
-    base = 10 ** -((scales + 2) / steps)
+    base = 10**-((scales + 2) / steps)
 
     num_taps = len(taps)
 
