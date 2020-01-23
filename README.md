@@ -12,19 +12,19 @@ On windows you will need a terminal with root access to install Taptimise i.e yo
 
 If [Git](https://git-scm.com/download/win) is installed and accesable from the command line (test with `git --version`). Install Taptimise using pip with: `pip install git+https://github.com/ConorWilliams/taptimise` verify the installation by running: `taptimise -V`.
 
-#### Without Git 
+#### Without Git
 
 Press on the "Clone or download" button and "Download ZIP". Extract the ZIP archive. `cd` into the extracted folder (probably `taptimise-master`) and install Taptimise with `pip install .` (inluding the .) verify the installation by running: `taptimise -V`.
 
 #### Test
 
-Still withing the extracted Taptimise folder, to run a full test on one of the example villages run `taptimise test/e1.csv 1000` and view the generated report `test/e1_report.html` in your web browser.
+Still within the extracted Taptimise folder, to run a full test on one of the example villages run `taptimise test/e1.csv 1000` and view the generated report `test/e1_report.html` in your web browser.
 
 ## Usage
 
 #### Basic
 To run Taptimise with the default setting use:
-`taptimise pat/to/file.csv tap_load`. The csv containing the house positions
+`taptimise path/to/file.csv tap_load`. The csv containing the house positions
 should be formatted exactly as per the
 [example](https://github.com/ConorWilliams/taptimise/tree/master/test) csv's.
 I.e comma no space, newline separates houses. The path to the csv file can be
@@ -42,11 +42,11 @@ Taptimise can accept several command line flags to tweak the optimisation.
 *  `-b SIZE`, `--buffer-size SIZE` size of each houses internal buffer. Defaults to a multiple (5x) of the number of taps.
 *  `-s STEPS`, `--steps STEPS`, number of cooling steps per scale per tap.
 * `--scales NUM_SCALES`, set the number of length scales in the problem. Defaults to automatic detection.
-* `-o OVERLOAD`, `--overload OVERLOAD`, set the overload fraction to enable tap-quantum-tunnelling. 
+* `-o OVERLOAD`, `--overload OVERLOAD`, set the overload fraction to enable tap-quantum-tunnelling.
 * `--disable-auto`, disables auto rerun if biggest house-tap separation is greater than MAX_DISTANCE.
 * `--disable-debug`, disable saving run/debug data.
-* `--csv`, writes the optimised tap locations to a csv file as well as the html report
-* `--scribble SCRIBBLE`, lets Taptimise read www.scribblemaps.com native csv output, argument is the house demand
+* `--csv`, writes the optimised tap locations to a csv file as well as the html report.
+* `--scribble SCRIBBLE`, lets Taptimise read www.scribblemaps.com native csv output, argument is the house demand.
 
 
 Setting a maximum separation with `-m` will trigger automatic reruns each using more taps until a solution is found.
