@@ -203,6 +203,7 @@ def main():
     houses = []
     taps = []
     run_data = []
+    counters = []
 
     print("DOING", len(batches), "mini-BATCHES")
 
@@ -238,6 +239,7 @@ def main():
 
         if len(t_tmp) > 1:
             run_data.append(run_data_tmp[0])
+            counters.append(len(h_tmp))
 
         houses.extend(h_tmp)
         taps.extend(t_tmp)
@@ -299,7 +301,7 @@ def main():
 
         E0 = run_data[0][0][1]
 
-        for order, run in enumerate(run_data):
+        for order, (run, count) in enumerate(zip(run_data, counters)):
 
             if order == len(run_data) - 1:
                 order = "ZTC"
@@ -309,7 +311,7 @@ def main():
             data = np.asarray(run)
             ind = np.arange(len(run))
 
-            counts = data[::, 2:5:1] * 100 / len(houses)
+            counts = data[::, 2:5:1] * 100 / count
 
             counts[::, 1] += counts[::, 0]
             counts[::, 2] += counts[::, 1]
@@ -319,7 +321,7 @@ def main():
 
             ax.set_xlabel("Monte-Carlo Steps")
             ax.set_ylabel("Percentage Count")
-            ax.set_title(f"Order = {order}")
+            ax.set_title(f"Batch = {order}")
 
             ax.fill_between(
                 ind, counts[::, 0], label="Favourable", color="mediumseagreen"
