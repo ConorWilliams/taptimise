@@ -236,7 +236,7 @@ def main():
         # artifact from non parallel age really should be None
         num_taps = args.num_taps
 
-        if len(h_tmp) > 1:
+        if len(t_tmp) > 1:
             run_data.append(run_data_tmp[0])
 
         houses.extend(h_tmp)
