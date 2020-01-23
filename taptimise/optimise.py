@@ -234,8 +234,6 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 
                     h.buff.insert(old_tap)
 
-                    # does not need to recalculate centre
-
             if debug:
                 data.append([temp, energy, *counters])
 

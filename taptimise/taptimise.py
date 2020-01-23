@@ -184,10 +184,9 @@ def main():
     num_taps = args.num_taps
 
     tot = sum(h[2] for h in raw_houses)
-    num_batches = math.ceil(tot * 1.1 / args.max_load)
+    num_batches = math.ceil(tot * 1.05 / args.max_load + 0.5)
 
     while True:
-
         batches = partition(raw_houses, num_batches)
         s = 0
         for b in batches:
@@ -196,17 +195,20 @@ def main():
         if num_batches == 1 or s <= math.ceil(tot * 1.05 / args.max_load + 0.5):
             break
         else:
-            print(f"failed {num_batches} kmeans")
+            print(
+                f"Failed kmeans {num_batches} batch partition, simplifying..."
+            )
             num_batches -= 1
 
     houses = []
     taps = []
+    run_data = []
 
-    print("DOIING", len(batches), "BATCHES")
+    print("DOING", len(batches), "mini-BATCHES")
 
     for l, b in enumerate(batches):
         while max_dist > args.max_distance:
-            h_tmp, t_tmp, max_dist, run_data, scales = optimise(
+            h_tmp, t_tmp, max_dist, run_data_tmp, scales = optimise(
                 b,
                 args.max_load,
                 num_taps=num_taps,
@@ -225,12 +227,18 @@ def main():
                 break
 
         if l > 0:
+            # unique tap numbering
             for h in h_tmp:
                 h[2] += len(taps)
             for t in t_tmp:
                 t[2] += len(taps)
 
+        # artifact from non parallel age really should be None
         num_taps = args.num_taps
+
+        if len(h_tmp) > 1:
+            run_data.append(run_data_tmp[0])
+
         houses.extend(h_tmp)
         taps.extend(t_tmp)
 
@@ -278,8 +286,6 @@ def main():
     fig.tight_layout()
 
     map_svg = save_svg(fig)
-
-    plt.show()
 
     # ****************************************************************************
     # *                                Plot Debug                                *
