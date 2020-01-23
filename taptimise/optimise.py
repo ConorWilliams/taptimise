@@ -143,8 +143,8 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
             if debug:
                 counters = [0, 0, 0]
 
-            # for rejection sampling, does not matter that it is not updated every
-            # house as worst case all taps become equally likely
+            # for rejection sampling, does not matter that it is not updated
+            # every house as worst case all taps become equally likely
             emax = max(t.energy for t in taps)
 
             for _ in range(len(houses)):
