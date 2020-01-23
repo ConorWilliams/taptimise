@@ -126,7 +126,6 @@ def main():
         type=float,
         help="Set the quantum tunnel overload threshold",
     )
-    parser.add_argument("--batch", action="store", type=int, default=1)
     parser.add_argument(
         "--csv", action="store_true", help="write results to a .csv file"
     )

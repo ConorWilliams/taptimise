@@ -1,4 +1,8 @@
 # Taptimise
+
+**This is an EXPERIMENTAL branch that implements pre-batching of villages to vastly accelerate simulations of large villages. It seems to work very well but is less tested compared to the master branch so use at your own PERIL.**
+
+
 Second generation tap optimisation algorithm for the eWaterPay project.
 
 See the results here: [https://conorwilliams.github.io.](https://conorwilliams.github.io.)
