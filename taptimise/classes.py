@@ -9,7 +9,7 @@ OVERLOAD_BASE = 10
 EXPECTATION_EXPONENT = 2
 
 
-class Buffer():
+class Buffer:
     # Basic circular buffer overwrites on wrap-around
     def __init__(self, size):
         self.size = size
@@ -35,7 +35,7 @@ class Buffer():
         self.data = []
 
 
-class Tap():
+class Tap:
     def __init__(self, max_load, exp_load):
         self.pos = complex(0, 0)
         self.vec_sum = complex(0, 0)
@@ -52,22 +52,23 @@ class Tap():
     def centralise(self):
         # set position to centroid
         if self.load == 0:
-            return
-        self.pos = self.vec_sum / self.load
+            pass
+        else:
+            self.pos = self.vec_sum / self.load
 
     def score(self):
-        # calculates taps total energy
+        # updates the taps total energy and returns the energy change.
         self.old_energy = self.energy
         self.energy = 0
 
         # sums all bond-energies
         for h in self.houses:
             rel = h.pos - self.pos
-            rel = rel.real**2 + rel.imag**2
+            rel = rel.real ** 2 + rel.imag ** 2
 
             # penalise bonds longer than max walking distance
             if h.max_sq_dist > 0 and rel > h.max_sq_dist:
-                rel *= ((rel / h.max_sq_dist) ** DISTANCE_EXPONENT)
+                rel *= (rel / h.max_sq_dist) ** DISTANCE_EXPONENT
 
             rel *= h.demand
 
@@ -79,12 +80,12 @@ class Tap():
 
         # penalise loads over maximum load exponentially
         if self.load > self.max_load:
-            self.energy *= (OVERLOAD_BASE ** (self.load / self.max_load - 1))
+            self.energy *= OVERLOAD_BASE ** (self.load / self.max_load - 1)
 
         return self.energy - self.old_energy
 
 
-class House():
+class House:
     def __init__(self, x, y, demand, buff_size, max_sq_dist):
         self.pos = complex(x, y)
         self.demand = demand
@@ -111,5 +112,5 @@ class House():
 
     def dist(self):
         rel = self.pos - self.tap.pos
-        rel = rel.real**2 + rel.imag**2
+        rel = rel.real ** 2 + rel.imag ** 2
         return math.sqrt(rel)
