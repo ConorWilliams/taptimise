@@ -45,7 +45,7 @@ def optimise(
     if num_taps is None:
         num_taps = int(math.ceil(tot_demand * 1.05 / max_load + 0.5))
     elif num_taps * max_load < tot_demand:
-        print("WARNING - Not enough taps to support village")
+        print("ERROR - Not enough taps to support village")
         exit()
 
     print("Attempting to optimise", num_taps, "taps.")
@@ -116,7 +116,7 @@ def optimise(
 
     max_dist = max(out[3] for out in h_out)
 
-    return h_out, t_out, max_dist, debug_data, num_scales
+    return (h_out, t_out, max_dist, debug_data, sum(t.energy for t in taps))
 
 
 def cool(houses, taps, steps, kB, overvolt, scales, debug=False):

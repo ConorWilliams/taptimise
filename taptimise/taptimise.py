@@ -72,39 +72,43 @@ def main():
     # ****************************************************************************
 
     parser = argparse.ArgumentParser(formatter_class=formatter)
+    group = parser.add_mutually_exclusive_group(required=True)
+
+    parser.add_argument("path", help="Path to house data.")  # positional
 
     parser.add_argument(
         "-V", "--version", action="version", version="%(prog)s " + __version__
     )
-
-    parser.add_argument("path", help="path to house data")
-    parser.add_argument(
+    group.add_argument(
+        "-t",
         "--tap-capacity",
         type=float,
         action="store",
-        help="maximum load a single tap can support",
+        metavar="CAP",
+        help="Maximum load a single tap can support.",
+    )
+    group.add_argument(
+        "-N",
+        "--optimise-for-n",
+        metavar="N",
+        action="store",
+        type=int,
+        help="Optimise the village for N taps.",
     )
     parser.add_argument(
         "-n",
         "--num-taps",
         type=int,
         action="store",
-        help="number of taps to start with",
+        help="Set the number of taps to start with.",
         metavar="NUM",
-    )
-    parser.add_argument(
-        "-N",
-        "--fix-num-mode",
-        action="store",
-        type=int,
-        help="optimise the village for N taps (exludes other flags)",
     )
     parser.add_argument(
         "-m",
         "--max-distance",
         type=float,
         default=-1,
-        help="maximum house-tap distance",
+        help="Maximum house-tap distance.",
         action="store",
         metavar="DIST",
     )
@@ -113,7 +117,7 @@ def main():
         "--buffer-size",
         type=int,
         action="store",
-        help="size of each houses internal buffer",
+        help="Size of each houses internal buffer.",
         metavar="SIZE",
     )
     parser.add_argument(
@@ -121,41 +125,43 @@ def main():
         "--steps",
         action="store",
         type=int,
-        help="number of cooling steps per scale per tap",
+        help="Number of Monte-Carlo cooling steps per scale per tap.",
     )
     parser.add_argument(
-        "--scales", action="store", type=int, help="set number of scales"
+        "--scribble",
+        action="store",
+        type=float,
+        help="Set parser for scribble maps file argument is per house demand.",
+    )
+    parser.add_argument(
+        "--scales",
+        action="store",
+        type=int,
+        help="Set number of scales, leave blank for automatic detection.",
     )
     parser.add_argument(
         "-o",
         "--overload",
         action="store",
         type=float,
-        help="Set the quantum tunnel overload threshold",
+        metavar="FRAC",
+        help="Set the overload threshold to enable quantum tunneling.",
     )
     parser.add_argument(
-        "--csv", action="store_true", help="write results to a .csv file"
+        "--csv", action="store_true", help="Write results to a .csv file."
     )
     parser.add_argument(
         "--no-relax",
         action="store_true",
-        help="Disables extra relaxation optimisation usefull for testing quick runs",
+        help="Disables extra relaxation optimisation.",
     )
     parser.add_argument(
-        "--scribble",
-        action="store",
-        type=float,
-        help="input csv is scribble maps format",
-    )
-    parser.add_argument(
-        "--disable-auto",
+        "--no-auto",
         action="store_true",
-        help="disables auto rerun if house too far",
+        help="Disables automatic reruns when max house-tap separation too large.",
     )
     parser.add_argument(
-        "--disable-debug",
-        action="store_false",
-        help="save run data for debugging",
+        "--no-debug", action="store_false", help="Disable debugging graphs."
     )
 
     args = parser.parse_args()
@@ -189,27 +195,9 @@ def main():
                 except:
                     print("Can't read", row)
 
-    if args.tap_capacity is not None:
-        # capacity is something
-        if args.fix_num_mode is not None:
-            # set both error
-            print("Set a tap capacty and fix-num-mode not supported")
-            exit()
-        else:
-            pass
-            # classical execution
-    else:
-        # capacity is none
-        if args.fix_num_mode is None:
-            # set both error
-            print("need either --tap-capacity or --fix-num-mode X")
-            exit()
-        else:
-            # new mode
-            args.num_taps = args.fix_num_mode
-            args.tap_capacity = (
-                1.15 * sum(h[2] for h in raw_houses) / args.num_taps
-            )
+    if args.optimise_for_n is not None:
+        args.num_taps = args.optimise_for_n
+        args.tap_capacity = 1.15 * sum(h[2] for h in raw_houses) / args.num_taps
 
     convert = LocalXY(*raw_houses[0][0:2])
 
@@ -220,12 +208,12 @@ def main():
     num_taps = args.num_taps
 
     while max_dist > args.max_distance:
-        houses, taps, max_dist, run_data, scales = optimise(
+        houses, taps, max_dist, run_data, energy = optimise(
             raw_houses,
             args.tap_capacity,
             num_taps=num_taps,
             steps=args.steps,
-            debug=args.disable_debug,
+            debug=args.no_debug,
             multiscale=args.scales,
             max_dist=args.max_distance,
             buff_size=args.buffer_size,
@@ -236,7 +224,7 @@ def main():
 
         print()
 
-        if args.disable_auto or args.max_distance < 0:
+        if args.no_auto or args.max_distance < 0:
             break
 
     # ****************************************************************************
@@ -287,16 +275,13 @@ def main():
 
     debug_svg = []
 
-    if args.disable_debug:
+    if args.no_debug:
 
         width = 1
 
         E0 = run_data[0][0][1]
 
         for order, run in enumerate(run_data):
-
-            if order == len(run_data) - 1:
-                order = "ZTC"
 
             fig, ax = plt.subplots()
 
@@ -313,7 +298,7 @@ def main():
 
             ax.set_xlabel("Monte-Carlo Steps")
             ax.set_ylabel("Percentage Count")
-            ax.set_title(f"Order = {order}")
+            ax.set_title(f"Cooling Curve")
 
             ax.fill_between(
                 ind, counts[::, 0], label="Favourable", color="mediumseagreen"
@@ -338,12 +323,13 @@ def main():
 
             ax.set_xlim(ind[0], ind[-1])
             ax.set_ylim(bottom=0)
-            ax.legend()
+            ax.legend(loc="center right")
 
             ax2 = ax.twinx()
 
-            ax2.set_ylabel("Energy Fraction")
-            ax2.semilogy(ind, smooth(data[::, 1] / E0), color="k")
+            ax2.set_ylabel("Relative Energy")
+            tmp = smooth(data[::, 1])
+            ax2.semilogy(ind, (tmp + np.min(tmp) + 1), color="k")
 
             fig.tight_layout()
 
@@ -351,7 +337,7 @@ def main():
 
             debug_svg.append(svg)
 
-        print("Total final energy is: ", f"{Decimal(run_data[-1][-1][1]):.2E}")
+        print("Total final energy is: ", f"{Decimal(energy):.2E}")
 
     print("The biggest walk is:", max_dist)
     print("Percentage loads:", ", ".join(str(tap[3]) for tap in taps))
@@ -440,7 +426,7 @@ def main():
 
     <p> Taptimise placed <b>{len(taps)} taps</b>. The furthest tap-house separation was
         <b>{'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} meters</b>.
-        The final energy of the village was <b>{Decimal(run_data[-1][-1][1]):.2E}
+        The final energy of the village was <b>{Decimal(energy):.2E}
         units </b>. A summery of the tap percentage loads is:
         {', '.join(str(tap[3]) for tap in taps)}. With a standard deviation of
         <b>{round(statistics.pstdev(t[3] for t in taps))}</b>.</p>
