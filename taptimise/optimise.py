@@ -12,7 +12,7 @@ STEP_MULTIPLYER = 100
 ZTC_MULTIPLYER = 1
 
 TEMPERATURE_MULTIPLYER = 1
-TELEPORT_MULTIPLYER = 0.5
+TELEPORT_MULTIPLYER = 1
 
 KB_AVERAGE_RUNS = 100
 LENGTH_SCALE_THRESHOLD = 0.5
@@ -243,8 +243,11 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
         if new_kB < kB:
             kB = new_kB
         elif scale != scales - 1:
-            print("Stagnation detected - breaking loop.")
+            print("Stagnation detected - breaking loop early.")
             break
+
+    else:
+        print("All length scales relaxed.")
 
     return data
 
