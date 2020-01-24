@@ -46,6 +46,7 @@ def optimise(
         num_taps = int(math.ceil(tot_demand * 1.05 / max_load + 0.5))
     elif num_taps * max_load < tot_demand:
         print("WARNING - Not enough taps to support village")
+        exit()
 
     print("Attempting to optimise", num_taps, "taps.")
 
