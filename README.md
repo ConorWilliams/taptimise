@@ -31,6 +31,8 @@ I.e comma no space, newline separates houses. The path to the csv file can be
 relative or absolute. Taptimise should produce a report
 (`pat/to/file_report.html`) containing the optimised tap positions.
 
+The first argument to taptimise is the path to the csv. The second argument to taptimise is the maximum load that a tap can support (i.e how much water EACH tap can output per day). If using scribble maps `.csv` pass the flag `--scribble x` where `x` is the daily amount of water consumed PER house. Taptimise will then compute the required number of taps automatically. 
+
 #### Advanced
 
 Taptimise can accept several command line flags to tweak the optimisation.
