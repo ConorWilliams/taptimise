@@ -142,7 +142,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
     num_taps = len(taps)
 
     for scale in range(scales):
-        temp = 1
+        temp = 1.0
         for i in trange(steps, ascii=True):
             temp = base * temp
 
@@ -150,7 +150,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 counters = [0, 0, 0]
 
             # for rejection sampling, does not matter that it is not updated every
-            # house as worst case all taps become equally likely
+            # house as worst case all taps become equally (un)likely
             emax = max(t.energy for t in taps)
 
             for _ in range(len(houses)):
@@ -158,15 +158,10 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 # probability proportional to the taps energy
                 while True:
                     old_tap = taps[int(random.random() * num_taps)]
-                    # Potential issues for emax >> all other energies, potential
-                    # fixes add a small fudge factor such that p >= ~0.1.
                     p = old_tap.energy / emax
-
-                    # The house free taps (have energy zero) need to be passed
-                    # as they have no taps to randomly pick, should attach to
-                    # them with a high probability in the next stage.
                     rand = random.random()
-                    if (p >= 1) or (rand < p):
+
+                    if p >= 1 or rand < p:
                         # This is a bad way to extract a random element fom a set.
                         j = int(random.random() * len(old_tap.houses))
                         h = tuple(old_tap.houses)[j]
@@ -182,24 +177,21 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 # sampling such that probability of picking new tap is proportional
                 # to 1 - tap.energy / emax
                 while new_tap is old_tap:
-                    count = 0
-                    while True:
-                        count += 1
+                    for _ in range(num_taps):
                         new_tap = taps[int(random.random() * num_taps)]
                         p = new_tap.energy / emax
-
                         if (p <= 0) or (random.random() > p):
                             break
+                    else:  # nobreak
+                        new_tap = random.choice(taps)
 
-                        if count > num_taps:
-                            new_tap = random.choice(taps)
-                            break
-
-                # quantum tunnel if tap is overloaded
-                if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
-                    if random.random() < prob * (1 - i / steps):
-                        energy += qtunnel(h, taps)
-                        continue
+                if (  # quantum tunnel if tap is overloaded
+                    kB > 0
+                    and h.tap.load / h.tap.max_load > overvolt
+                    and random.random() < prob * (1 - i / steps)
+                ):
+                    energy += qtunnel(h, taps)
+                    continue
 
                 # move house to new tap
                 h.detach()
@@ -254,7 +246,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
             print("Stationary state detected - breaking loop early.")
             break
 
-    else:
+    else:  # nobreak
         if kB > 0:
             print("All length scales relaxed.")
 
@@ -264,9 +256,6 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 def swap(h1, h2):
     # tries to swap the taps connected to h1 and h2. Returns the energy of the
     # swap and a boolean encoding if a swap occured.
-    if h1 is h2:
-        return 0, False
-
     t1 = h1.tap
     t2 = h2.tap
 
@@ -289,10 +278,10 @@ def near(num, h_ref, houses):
     while len(closest) <= num + 1:
         tmp_house = closest[-1]
         smallest_dist = float("inf")
-        dist = h_ref.dist(tmp_house)
+        dist = h_ref.sqdist(tmp_house)
 
         for h in houses:
-            new_dist = h_ref.dist(h)
+            new_dist = h_ref.sqdist(h)
             if dist < new_dist and new_dist < smallest_dist:
                 tmp_house = h
                 smallest_dist = new_dist
@@ -398,7 +387,6 @@ def get_grid(houses):
 def calc_kB(houses, taps):
     # computes the median bond energy.
     # kB ~ average bond energy
-
     energy = []
     for tap in taps:
         tap.score()
