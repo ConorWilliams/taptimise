@@ -303,9 +303,10 @@ def relax(houses, taps):
     # lowered does not affect tap positions
     random.shuffle(houses)
     swaps = 0
+    avg_h_per_t = len(houses) / len(taps)
 
     for h in tqdm(houses, ascii=True):
-        for o in near(len(h.tap.houses), h, houses):
+        for o in near(avg_h_per_t, h, houses):
             delta_E, swapped = swap(h, o)
 
             if delta_E > 0:
