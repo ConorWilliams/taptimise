@@ -128,6 +128,11 @@ def main():
         "--csv", action="store_true", help="write results to a .csv file"
     )
     parser.add_argument(
+        "--no-relax",
+        action="store_true",
+        help="Disables extra relaxation optimisation usefull for testing quick runs",
+    )
+    parser.add_argument(
         "--scribble", action="store", help="input csv is scribble maps format"
     )
     parser.add_argument(
@@ -191,6 +196,7 @@ def main():
             max_dist=args.max_distance,
             buff_size=args.buffer_size,
             overvolt=args.overload,
+            norelax=args.no_relax,
         )
         num_taps = len(taps) + 1
 
@@ -398,10 +404,9 @@ def main():
     <p> The arguments & flags given to produce this report where:
         "{' '.join(sys.argv[1:])}" running Taptimise version {__version__}. </p>
 
-    <p> Taptimise placed <b>{len(taps)} taps</b>, running over <b>{scales}
-        length scales</b>. The furthest tap-house separation was
-        {'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} meters. The
-        final energy of the village was <b>{Decimal(run_data[-1][-1][1]):.2E}
+    <p> Taptimise placed <b>{len(taps)} taps</b>. The furthest tap-house separation was
+        <b>{'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} meters</b>.
+        The final energy of the village was <b>{Decimal(run_data[-1][-1][1]):.2E}
         units </b>. A summery of the tap percentage loads is:
         {', '.join(str(tap[3]) for tap in taps)}. With a standard deviation of
         <b>{round(statistics.pstdev(t[3] for t in taps))}</b>.</p>

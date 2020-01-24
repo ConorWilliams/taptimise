@@ -2,6 +2,7 @@
 
 import random
 import math
+import statistics
 
 from tqdm import trange, tqdm
 
@@ -34,6 +35,7 @@ def optimise(
     max_dist=-1,
     buff_size=None,
     overvolt=None,
+    norelax=False,
 ):
     # finds optimal tap position for houses
     tot_demand = sum(h[2] for h in houses)
@@ -72,6 +74,7 @@ def optimise(
     taps = [Tap(max_load, max_load * avg_frac_load) for _ in range(num_taps)]
 
     kB = 0
+    # computes the expectation kB of a random (uncentalised) layout
     for _ in range(KB_AVERAGE_RUNS):
         randomise(houses, taps)
         kB += calc_kB(houses, taps)
@@ -98,7 +101,8 @@ def optimise(
     run_info = cool(houses, taps, ztc_steps, -1, overvolt, 1, debug=debug)
     debug_data.append(run_info)
 
-    print("Relaxed", relax(houses, taps), "pairs.")
+    if not norelax:
+        print("Relaxed", relax(houses, taps), "pairs.")
 
     h_out = [
         [h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist(h.tap)]
@@ -247,7 +251,8 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
             break
 
     else:
-        print("All length scales relaxed.")
+        if kB > 0:
+            print("All length scales relaxed.")
 
     return data
 
@@ -386,17 +391,15 @@ def get_grid(houses):
 
 
 def calc_kB(houses, taps):
-    # computes the median energy of current bonds
-    # kB ~ expectation bond energy
+    # computes the median bond energy.
+    # kB ~ average bond energy
 
     energy = []
     for tap in taps:
         tap.score()
         energy.append(tap.energy)
 
-    energy = sorted(energy)
-
-    return energy[len(energy) // 2] * len(energy) / len(houses)
+    return statistics.median(energy) * len(energy) / len(houses)
 
 
 def calc_scales(houses):
@@ -426,16 +429,9 @@ def calc_scales(houses):
     expectation = len(houses) - 1
 
     num_scales = 0
-    # kBs = []
     for s in scales:
         if len(s) >= expectation:
             num_scales += 1
-            # avg = sum(10 ** e for e in s)  # sum(d) / mind
-            # avg *= mind  # sum(d) in bin
-            # avg /= len(s)  # mean(d) in bin = d_
-            # avg *= avg  # sq(d_)
-            # avg *= sum(h.demand for h in houses) / len(houses)
-            # kBs.append(avg)
 
     if num_scales < 2:
         return 2
@@ -445,7 +441,6 @@ def calc_scales(houses):
 
 def find_tap_index(house, taps):
     # finds index of house's tap in taps
-
     for c, tap in enumerate(taps):
         if tap is house.tap:
             return c
