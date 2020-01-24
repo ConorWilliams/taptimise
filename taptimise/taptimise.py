@@ -79,9 +79,11 @@ def main():
 
     parser.add_argument("path", help="path to house data")
     parser.add_argument(
-        "max_load", type=float, help="maximum load a single tap can support"
+        "--tap-capacity",
+        type=float,
+        action="store",
+        help="maximum load a single tap can support",
     )
-
     parser.add_argument(
         "-n",
         "--num-taps",
@@ -89,6 +91,13 @@ def main():
         action="store",
         help="number of taps to start with",
         metavar="NUM",
+    )
+    parser.add_argument(
+        "-N",
+        "--fix-num-mode",
+        action="store",
+        type=int,
+        help="optimise the village for N taps (exludes other flags)",
     )
     parser.add_argument(
         "-m",
@@ -133,7 +142,10 @@ def main():
         help="Disables extra relaxation optimisation usefull for testing quick runs",
     )
     parser.add_argument(
-        "--scribble", action="store", help="input csv is scribble maps format"
+        "--scribble",
+        action="store",
+        type=float,
+        help="input csv is scribble maps format",
     )
     parser.add_argument(
         "--disable-auto",
@@ -177,6 +189,28 @@ def main():
                 except:
                     print("Can't read", row)
 
+    if args.tap_capacity is not None:
+        # capacity is something
+        if args.fix_num_mode is not None:
+            # set both error
+            print("Set a tap capacty and fix-num-mode not supported")
+            exit()
+        else:
+            pass
+            # classical execution
+    else:
+        # capacity is none
+        if args.fix_num_mode is None:
+            # set both error
+            print("need either --tap-capacity or --fix-num-mode X")
+            exit()
+        else:
+            # new mode
+            args.num_taps = args.fix_num_mode
+            args.tap_capacity = (
+                1.15 * sum(h[2] for h in raw_houses) / args.num_taps
+            )
+
     convert = LocalXY(*raw_houses[0][0:2])
 
     for h in raw_houses:
@@ -188,7 +222,7 @@ def main():
     while max_dist > args.max_distance:
         houses, taps, max_dist, run_data, scales = optimise(
             raw_houses,
-            args.max_load,
+            args.tap_capacity,
             num_taps=num_taps,
             steps=args.steps,
             debug=args.disable_debug,
