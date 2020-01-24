@@ -104,13 +104,21 @@ class House:
 
     def attach(self, tap):
         # attach to a new tap updating it
+        if tap is None:
+            return
+
         tap.houses.add(self)
         tap.vec_sum += self.pos * self.demand
         tap.load += self.demand
 
         self.tap = tap
 
-    def dist(self):
-        rel = self.pos - self.tap.pos
+    def dist(self, other):
+        rel = self.pos - other.pos
         rel = rel.real ** 2 + rel.imag ** 2
         return math.sqrt(rel)
+
+    def sqdist(self, other):
+        rel = self.pos - other.pos
+        rel = rel.real ** 2 + rel.imag ** 2
+        return rel

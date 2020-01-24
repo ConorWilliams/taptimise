@@ -2,8 +2,9 @@
 
 import random
 import math
+import statistics
 
-from tqdm import trange
+from tqdm import trange, tqdm
 
 from .classes import Tap, House
 
@@ -12,10 +13,9 @@ STEP_MULTIPLYER = 100
 ZTC_MULTIPLYER = 1
 
 TEMPERATURE_MULTIPLYER = 1
-TELEPORT_MULTIPLYER = 0.5
+TELEPORT_MULTIPLYER = 1
 
 KB_AVERAGE_RUNS = 100
-LENGTH_SCALE_THRESHOLD = 0.5
 OVERVOALT_DEFAULT = 1.2
 
 
@@ -34,6 +34,7 @@ def optimise(
     max_dist=-1,
     buff_size=None,
     overvolt=None,
+    norelax=False,
 ):
     # finds optimal tap position for houses
     tot_demand = sum(h[2] for h in houses)
@@ -72,6 +73,7 @@ def optimise(
     taps = [Tap(max_load, max_load * avg_frac_load) for _ in range(num_taps)]
 
     kB = 0
+    # computes the expectation kB of a random (uncentalised) layout
     for _ in range(KB_AVERAGE_RUNS):
         randomise(houses, taps)
         kB += calc_kB(houses, taps)
@@ -93,13 +95,16 @@ def optimise(
 
     # zero temp cooling
     print()
-    print("Zero temperature optimisation:")
+    print("Zero temperature & pair wise optimisations:")
 
     run_info = cool(houses, taps, ztc_steps, -1, overvolt, 1, debug=debug)
     debug_data.append(run_info)
 
+    if not norelax:
+        print("Relaxed", relax(houses, taps), "pairs.")
+
     h_out = [
-        [h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist()]
+        [h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist(h.tap)]
         for h in houses
     ]
 
@@ -136,15 +141,20 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
     num_taps = len(taps)
 
     for scale in range(scales):
-        temp = 1
+        temp = 1.0
         for i in trange(steps, ascii=True):
             temp = base * temp
 
             if debug:
                 counters = [0, 0, 0]
 
+<<<<<<< HEAD
             # for rejection sampling, does not matter that it is not updated
             # every house as worst case all taps become equally likely
+=======
+            # for rejection sampling, does not matter that it is not updated every
+            # house as worst case all taps become equally (un)likely
+>>>>>>> 26ef99668ab5794a54246a1b6d840c4c7fae1e43
             emax = max(t.energy for t in taps)
 
             for _ in range(len(houses)):
@@ -152,18 +162,17 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 # probability proportional to the taps energy
                 while True:
                     old_tap = taps[int(random.random() * num_taps)]
-                    # Potential issues for emax >> all other energies, potential
-                    # fixes add a small fudge factor such that p >= ~0.1.
                     p = old_tap.energy / emax
+                    rand = random.random()
 
-                    # The house free taps (have energy zero) need to be passed
-                    # as they have no taps to randomly pick, should attach to
-                    # them with a high probability in the next stage.
-                    if (p >= 1) or (random.random() < p):
+                    if p >= 1 or rand < p:
                         # This is a bad way to extract a random element fom a set.
                         j = int(random.random() * len(old_tap.houses))
                         h = tuple(old_tap.houses)[j]
                         break
+                    elif rand < 0.01:
+                        # Hacky O(1) fix for large emax issues
+                        emax = random.choice(taps).energy
 
                 # picks a new tap from buffer i.e more likely to be a near by tap
                 new_tap = h.buff.rand()
@@ -172,24 +181,21 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                 # sampling such that probability of picking new tap is proportional
                 # to 1 - tap.energy / emax
                 while new_tap is old_tap:
-                    count = 0
-                    while True:
-                        count += 1
+                    for _ in range(num_taps):
                         new_tap = taps[int(random.random() * num_taps)]
                         p = new_tap.energy / emax
-
                         if (p <= 0) or (random.random() > p):
                             break
+                    else:  # nobreak
+                        new_tap = random.choice(taps)
 
-                        if count > num_taps:
-                            new_tap = random.choice(taps)
-                            break
-
-                # quantum tunnel if tap is overloaded
-                if kB > 0 and h.tap.load / h.tap.max_load > overvolt:
-                    if random.random() < prob * (1 - i / steps):
-                        energy += qtunnel(h, taps)
-                        continue
+                if (  # quantum tunnel if tap is overloaded
+                    kB > 0
+                    and h.tap.load / h.tap.max_load > overvolt
+                    and random.random() < prob * (1 - i / steps)
+                ):
+                    energy += qtunnel(h, taps)
+                    continue
 
                 # move house to new tap
                 h.detach()
@@ -234,8 +240,6 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 
                     h.buff.insert(old_tap)
 
-                    # does not need to recalculate centre
-
             if debug:
                 data.append([temp, energy, *counters])
 
@@ -243,17 +247,77 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
         if new_kB < kB:
             kB = new_kB
         elif scale != scales - 1:
-            print("Stagnation detected - breaking loop.")
+            print("Stationary state detected - breaking loop early.")
             break
 
+    else:  # nobreak
+        if kB > 0:
+            print("All length scales relaxed.")
+
     return data
+
+
+def swap(h1, h2):
+    # tries to swap the taps connected to h1 and h2. Returns the energy of the
+    # swap and a boolean encoding if a swap occured.
+    t1 = h1.tap
+    t2 = h2.tap
+
+    if t1 is t2:
+        return 0, False
+
+    h1.detach()
+    h2.detach()
+
+    h1.attach(t2)
+    h2.attach(t1)
+
+    return t1.score() + t2.score(), True
+
+
+def near(num, h_ref, houses):
+    closest = []
+    closest.append(h_ref)  # this is the closest to h_ref
+
+    while len(closest) <= num + 1:
+        tmp_house = closest[-1]
+        smallest_dist = float("inf")
+        dist = h_ref.sqdist(tmp_house)
+
+        for h in houses:
+            new_dist = h_ref.sqdist(h)
+            if dist < new_dist and new_dist < smallest_dist:
+                tmp_house = h
+                smallest_dist = new_dist
+
+        closest.append(tmp_house)
+
+    return closest[1:]
+
+
+def relax(houses, taps):
+    # Attempts to swap the taps connected to a pair of houses if the energy is
+    # lowered does not affect tap positions
+    random.shuffle(houses)
+    swaps = 0
+    avg_h_per_t = len(houses) / len(taps)
+
+    for h in tqdm(houses, ascii=True):
+        for o in near(avg_h_per_t, h, houses):
+            delta_E, swapped = swap(h, o)
+
+            if delta_E > 0:
+                swap(h, o)
+            else:
+                swaps += swapped
+
+    return swaps
 
 
 def qtunnel(h, taps):
     # detaches h from tap and moves lowest scoring tap to h
     # reattaches lowest scoring taps other houses
     # clears buffers of all houses involved
-
     min_tap = min(taps, key=lambda t: t.load)
     old_tap = h.tap
 
@@ -324,31 +388,27 @@ def get_grid(houses):
 
 
 def calc_kB(houses, taps):
-    # computes the median energy of current bonds
-    # kB ~ expectation bond energy
-
+    # computes the median bond energy.
+    # kB ~ average bond energy
     energy = []
     for tap in taps:
         tap.score()
         energy.append(tap.energy)
 
-    energy = sorted(energy)
-
-    return energy[len(energy) // 2] * len(energy) / len(houses)
+    return statistics.median(energy) * len(energy) / len(houses)
 
 
 def calc_scales(houses):
-    # finds the number of length scales in the houses.
+    # finds the number of length scales in the village.
     dists = []
     for h in houses:
         for o in houses:
             if h is not o:
-                rel = h.pos - o.pos
-                rel = rel.real ** 2 + rel.imag ** 2
-                if math.isclose(0, rel, rel_tol=1e-09, abs_tol=0.0):
+                rel = h.dist(o)
+                if math.isclose(0, rel):
                     print("WARNING - two houses very close:", rel)
                 else:
-                    dists.append(math.sqrt(rel))
+                    dists.append(rel)
 
     mind = min(dists)
 
@@ -364,16 +424,9 @@ def calc_scales(houses):
     expectation = len(houses) - 1
 
     num_scales = 0
-    # kBs = []
     for s in scales:
         if len(s) >= expectation:
             num_scales += 1
-            # avg = sum(10 ** e for e in s)  # sum(d) / mind
-            # avg *= mind  # sum(d) in bin
-            # avg /= len(s)  # mean(d) in bin = d_
-            # avg *= avg  # sq(d_)
-            # avg *= sum(h.demand for h in houses) / len(houses)
-            # kBs.append(avg)
 
     if num_scales < 2:
         return 2
@@ -383,7 +436,6 @@ def calc_scales(houses):
 
 def find_tap_index(house, taps):
     # finds index of house's tap in taps
-
     for c, tap in enumerate(taps):
         if tap is house.tap:
             return c

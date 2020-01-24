@@ -7,6 +7,7 @@ import csv
 import os
 import io
 import sys
+import statistics
 from decimal import Decimal
 
 import numpy as np
@@ -18,7 +19,7 @@ from .optimise import optimise
 from .htmltable import to_html
 from .units import LocalXY
 
-WINDOW_SIZE = 5  # must be an odd number
+WINDOW_SIZE = 3  # must be an odd number
 
 
 def smooth(a, WSZ=WINDOW_SIZE):
@@ -78,9 +79,17 @@ def main():
 
     parser.add_argument("path", help="path to house data")
     parser.add_argument(
+<<<<<<< HEAD
         "max_load", type=float, help="maximum load a single tap can support"
     )
 
+=======
+        "--tap-capacity",
+        type=float,
+        action="store",
+        help="maximum load a single tap can support",
+    )
+>>>>>>> 26ef99668ab5794a54246a1b6d840c4c7fae1e43
     parser.add_argument(
         "-n",
         "--num-taps",
@@ -90,6 +99,16 @@ def main():
         metavar="NUM",
     )
     parser.add_argument(
+<<<<<<< HEAD
+=======
+        "-N",
+        "--fix-num-mode",
+        action="store",
+        type=int,
+        help="optimise the village for N taps (exludes other flags)",
+    )
+    parser.add_argument(
+>>>>>>> 26ef99668ab5794a54246a1b6d840c4c7fae1e43
         "-m",
         "--max-distance",
         type=float,
@@ -127,7 +146,19 @@ def main():
         "--csv", action="store_true", help="write results to a .csv file"
     )
     parser.add_argument(
+<<<<<<< HEAD
         "--scribble", action="store", help="input csv is scribble maps format"
+=======
+        "--no-relax",
+        action="store_true",
+        help="Disables extra relaxation optimisation usefull for testing quick runs",
+    )
+    parser.add_argument(
+        "--scribble",
+        action="store",
+        type=float,
+        help="input csv is scribble maps format",
+>>>>>>> 26ef99668ab5794a54246a1b6d840c4c7fae1e43
     )
     parser.add_argument(
         "--disable-auto",
@@ -170,6 +201,31 @@ def main():
                     raw_houses.append([float(elem) for elem in row])
                 except:
                     print("Can't read", row)
+<<<<<<< HEAD
+=======
+
+    if args.tap_capacity is not None:
+        # capacity is something
+        if args.fix_num_mode is not None:
+            # set both error
+            print("Set a tap capacty and fix-num-mode not supported")
+            exit()
+        else:
+            pass
+            # classical execution
+    else:
+        # capacity is none
+        if args.fix_num_mode is None:
+            # set both error
+            print("need either --tap-capacity or --fix-num-mode X")
+            exit()
+        else:
+            # new mode
+            args.num_taps = args.fix_num_mode
+            args.tap_capacity = (
+                1.15 * sum(h[2] for h in raw_houses) / args.num_taps
+            )
+>>>>>>> 26ef99668ab5794a54246a1b6d840c4c7fae1e43
 
     convert = LocalXY(*raw_houses[0][0:2])
 
@@ -182,7 +238,11 @@ def main():
     while max_dist > args.max_distance:
         houses, taps, max_dist, run_data, scales = optimise(
             raw_houses,
+<<<<<<< HEAD
             args.max_load,
+=======
+            args.tap_capacity,
+>>>>>>> 26ef99668ab5794a54246a1b6d840c4c7fae1e43
             num_taps=num_taps,
             steps=args.steps,
             debug=args.disable_debug,
@@ -190,6 +250,10 @@ def main():
             max_dist=args.max_distance,
             buff_size=args.buffer_size,
             overvolt=args.overload,
+<<<<<<< HEAD
+=======
+            norelax=args.no_relax,
+>>>>>>> 26ef99668ab5794a54246a1b6d840c4c7fae1e43
         )
         num_taps = len(taps) + 1
 
@@ -397,11 +461,20 @@ def main():
     <p> The arguments & flags given to produce this report where:
         "{' '.join(sys.argv[1:])}" running Taptimise version {__version__}. </p>
 
+<<<<<<< HEAD
     <p> Taptimise placed <b>{len(taps)} taps</b>, running over <b>{scales}
         length scales</b>. The furthest tap-house separation was
         {'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} units. A
         summery of the tap percentage loads is: {', '.join(str(tap[3]) for tap in taps)}.
         </p>
+=======
+    <p> Taptimise placed <b>{len(taps)} taps</b>. The furthest tap-house separation was
+        <b>{'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} meters</b>.
+        The final energy of the village was <b>{Decimal(run_data[-1][-1][1]):.2E}
+        units </b>. A summery of the tap percentage loads is:
+        {', '.join(str(tap[3]) for tap in taps)}. With a standard deviation of
+        <b>{round(statistics.pstdev(t[3] for t in taps))}</b>.</p>
+>>>>>>> 26ef99668ab5794a54246a1b6d840c4c7fae1e43
 
     <h2>Village Map</h2>
 
