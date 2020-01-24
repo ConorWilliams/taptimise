@@ -14,7 +14,7 @@ If [Git](https://git-scm.com/download/win) is installed and accesable from the c
 
 #### Without Git
 
-Press on the "Clone or download" button and "Download ZIP". Extract the ZIP archive. `cd` into the extracted folder (probably `taptimise-master`) and install Taptimise with `pip install .` (inluding the .) verify the installation by running: `taptimise -V`.
+Press on the "Clone or download" button and "Download ZIP". Extract the ZIP archive. `cd` into the extracted folder (probably `taptimise-master`) and install Taptimise with `pip install .` (including the .) verify the installation by running: `taptimise -V`.
 
 #### Test
 
@@ -47,10 +47,13 @@ Taptimise can accept several command line flags to tweak the optimisation.
 * `--disable-debug`, disable saving run/debug data.
 * `--csv`, writes the optimised tap locations to a csv file as well as the html report.
 * `--scribble SCRIBBLE`, lets Taptimise read www.scribblemaps.com native csv output, argument is the house demand.
+* `--no-relax`, Disables the final pair wise 'relaxation' stage. Useful for debugging.
 
 
-Setting a maximum separation with `-m` will trigger automatic reruns each using more taps until a solution is found.
+Setting a maximum separation with `-m` will trigger automatic reruns each using more taps until a solution is found. This can take a very long time.
 
 Increasing the number of simulation steps with `-s` will improve the result at the expense of longer compute time.
+
+An effective 'auto' mode can be enabled by passing the flags `--steps 10 --scales 1000`. This will cause taptimise to loop through its cooling stage until it detects a stationary state. This is useful if you don't know how many Monte-Carlo steps to use and you don't want to risk overestimating.
 
 Setting the overload fraction with `-o` much less than 1.15 will cause non deterministic results.

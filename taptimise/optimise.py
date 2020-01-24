@@ -247,7 +247,7 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
         if new_kB < kB:
             kB = new_kB
         elif scale != scales - 1:
-            print("Stagnation detected - breaking loop early.")
+            print("Stationary state detected - breaking loop early.")
             break
 
     else:
