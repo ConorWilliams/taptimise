@@ -3,7 +3,7 @@
 import random
 import math
 
-from tqdm import trange
+from tqdm import trange, tqdm
 
 from .classes import Tap, House
 
@@ -98,8 +98,10 @@ def optimise(
     run_info = cool(houses, taps, ztc_steps, -1, overvolt, 1, debug=debug)
     debug_data.append(run_info)
 
+    print("Relaxed", relax(houses, taps), "pairs.")
+
     h_out = [
-        [h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist()]
+        [h.pos.real, h.pos.imag, find_tap_index(h, taps), h.dist(h.tap)]
         for h in houses
     ]
 
@@ -234,8 +236,6 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 
                     h.buff.insert(old_tap)
 
-                    # does not need to recalculate centre
-
             if debug:
                 data.append([temp, energy, *counters])
 
@@ -247,6 +247,59 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
             break
 
     return data
+
+
+def swap(h1, h2):
+    if h1 is h2:
+        return 0, False
+
+    t1 = h1.tap
+    t2 = h2.tap
+
+    if t1 is t2:
+        return 0, False
+
+    h1.detach()
+    h2.detach()
+
+    h1.attach(t2)
+    h2.attach(t1)
+
+    return t1.score() + t2.score(), True
+
+
+def near(num, h_ref, houses):
+    closest = []
+    closest.append(h_ref)  # this is the closest to h_ref
+
+    while len(closest) <= num + 1:
+        tmp_house = closest[-1]
+        smallest_dist = float("inf")
+        dist = h_ref.dist(tmp_house)
+
+        for h in houses:
+            new_dist = h_ref.dist(h)
+            if dist < new_dist and new_dist < smallest_dist:
+                tmp_house = h
+                smallest_dist = new_dist
+
+        closest.append(tmp_house)
+
+    return closest[1:]
+
+
+def relax(houses, taps):
+    swaps = 0
+    for h in tqdm(houses, ascii=True):
+        for o in near(len(h.tap.houses), h, houses):
+            delta_E, swapped = swap(h, o)
+
+            if delta_E > 0:
+                swap(h, o)
+            else:
+                swaps += swapped
+
+    return swaps
 
 
 def qtunnel(h, taps):
