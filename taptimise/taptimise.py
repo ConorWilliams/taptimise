@@ -130,6 +130,7 @@ def main():
     parser.add_argument(
         "--scribble",
         action="store",
+        metavar="DEMAND",
         type=float,
         help="Set parser for scribble maps file argument is per house demand.",
     )
