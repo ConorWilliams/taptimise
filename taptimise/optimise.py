@@ -93,7 +93,7 @@ def optimise(
 
     # zero temp cooling
     print()
-    print("Zero temperature optimisation:")
+    print("Zero temperature & pair wise optimisations:")
 
     run_info = cool(houses, taps, ztc_steps, -1, overvolt, 1, debug=debug)
     debug_data.append(run_info)
@@ -250,6 +250,8 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
 
 
 def swap(h1, h2):
+    # tries to swap the taps connected to h1 and h2. Returns the energy of the
+    # swap and a boolean encoding if a swap occured.
     if h1 is h2:
         return 0, False
 
@@ -289,7 +291,11 @@ def near(num, h_ref, houses):
 
 
 def relax(houses, taps):
+    # Attempts to swap the taps connected to a pair of houses if the energy is
+    # lowered does not affect tap positions
+    random.shuffle(houses)
     swaps = 0
+
     for h in tqdm(houses, ascii=True):
         for o in near(len(h.tap.houses), h, houses):
             delta_E, swapped = swap(h, o)
