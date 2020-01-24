@@ -165,11 +165,15 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                     # The house free taps (have energy zero) need to be passed
                     # as they have no taps to randomly pick, should attach to
                     # them with a high probability in the next stage.
-                    if (p >= 1) or (random.random() < p):
+                    rand = random.random()
+                    if (p >= 1) or (rand < p):
                         # This is a bad way to extract a random element fom a set.
                         j = int(random.random() * len(old_tap.houses))
                         h = tuple(old_tap.houses)[j]
                         break
+                    elif rand < 0.01:
+                        # Hacky O(1) fix for large emax issues
+                        emax = random.choice(taps).energy
 
                 # picks a new tap from buffer i.e more likely to be a near by tap
                 new_tap = h.buff.rand()

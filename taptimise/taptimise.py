@@ -19,7 +19,7 @@ from .optimise import optimise
 from .htmltable import to_html
 from .units import LocalXY
 
-WINDOW_SIZE = 5  # must be an odd number
+WINDOW_SIZE = 3  # must be an odd number
 
 
 def smooth(a, WSZ=WINDOW_SIZE):
