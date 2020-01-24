@@ -314,7 +314,6 @@ def qtunnel(h, taps):
     # detaches h from tap and moves lowest scoring tap to h
     # reattaches lowest scoring taps other houses
     # clears buffers of all houses involved
-
     min_tap = min(taps, key=lambda t: t.load)
     old_tap = h.tap
 
@@ -396,17 +395,16 @@ def calc_kB(houses, taps):
 
 
 def calc_scales(houses):
-    # finds the number of length scales in the houses.
+    # finds the number of length scales in the village.
     dists = []
     for h in houses:
         for o in houses:
             if h is not o:
-                rel = h.pos - o.pos
-                rel = rel.real ** 2 + rel.imag ** 2
-                if math.isclose(0, rel, rel_tol=1e-09, abs_tol=0.0):
+                rel = h.dist(o)
+                if math.isclose(0, rel):
                     print("WARNING - two houses very close:", rel)
                 else:
-                    dists.append(math.sqrt(rel))
+                    dists.append(rel)
 
     mind = min(dists)
 
