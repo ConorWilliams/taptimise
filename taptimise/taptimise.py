@@ -294,7 +294,7 @@ def main():
 
     debug_svg = []
 
-    if args.disable_debug:
+    if args.disable_debug and len(run_data) > 0:
 
         width = 1
 
