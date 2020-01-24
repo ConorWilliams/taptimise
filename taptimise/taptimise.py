@@ -328,8 +328,7 @@ def main():
             ax2 = ax.twinx()
 
             ax2.set_ylabel("Relative Energy")
-            tmp = smooth(data[::, 1])
-            ax2.semilogy(ind, (tmp + np.min(tmp) + 1), color="k")
+            ax2.semilogy(ind, smooth(data[::, 1]) ** 2, color="k")
 
             fig.tight_layout()
 
