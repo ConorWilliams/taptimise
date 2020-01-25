@@ -271,37 +271,21 @@ def swap(h1, h2):
     return t1.score() + t2.score(), True
 
 
-def near(num, h_ref, houses):
-    closest = []
-    closest.append(h_ref)  # this is the closest to h_ref
-
-    while len(closest) <= num + 1:
-        tmp_house = closest[-1]
-        smallest_dist = float("inf")
-        dist = h_ref.sqdist(tmp_house)
-
-        for h in houses:
-            new_dist = h_ref.sqdist(h)
-            if dist < new_dist and new_dist < smallest_dist:
-                tmp_house = h
-                smallest_dist = new_dist
-
-        closest.append(tmp_house)
-
-    return closest[1:]
-
-
 def relax(houses, taps):
     # Attempts to swap the taps connected to a pair of houses if the energy is
     # lowered does not affect tap positions
     random.shuffle(houses)
     swaps = 0
-    avg_h_per_t = len(houses) / len(taps)
+    avg = int(len(houses) / len(taps))
 
-    for h in tqdm(houses, ascii=True):
-        for o in near(avg_h_per_t, h, houses):
+    tmp = sorted(houses, key=lambda x: houses[0].sqdist(x))
+
+    for h in tqdm(tmp, ascii=True):
+        houses.sort(key=lambda x: h.sqdist(x))
+        near = houses[1 : avg + 1]
+
+        for o in near:
             delta_E, swapped = swap(h, o)
-
             if delta_E > 0:
                 swap(h, o)
             else:
