@@ -418,18 +418,21 @@ def main():
         </p>
 
     <p> Copyright 2019 C. J. Williams (CHURCHILL COLLEGE). Taptimise is free
-        (open-source) software with ABSOLUTELY NO WARRANTY, licensed under the
-        MIT license</p>
+        (open-source) software with ABSOLUTELY NO WARRANTY, distibuted under the
+        MIT license.
+        </p>
 
     <p> The arguments & flags given to produce this report where:
-        "{' '.join(sys.argv[1:])}" running Taptimise version {__version__}. </p>
+        "{' '.join(sys.argv[1:])}" running Taptimise version {__version__}.
+        </p>
 
     <p> Taptimise placed <b>{len(taps)} taps</b>. The furthest tap-house separation was
         <b>{'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} meters</b>.
         The final energy of the village was <b>{Decimal(energy):.2E}
         units </b>. A summery of the tap percentage loads is:
         {', '.join(str(tap[3]) for tap in taps)}. With a standard deviation of
-        <b>{round(statistics.pstdev(t[3] for t in taps),1)}</b>.</p>
+        <b>{round(statistics.pstdev(t[3] for t in taps),1)}</b>.
+        </p>
 
     <h2>Village Map</h2>
 
