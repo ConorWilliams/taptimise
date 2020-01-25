@@ -63,16 +63,15 @@ class Tap:
 
         # sums all bond-energies
         for h in self.houses:
-            rel = h.pos - self.pos
-            rel = rel.real ** 2 + rel.imag ** 2
+            sqdist = h.sqdist(self)
 
             # penalise bonds longer than max walking distance
-            if h.max_sq_dist > 0 and rel > h.max_sq_dist:
-                rel *= (rel / h.max_sq_dist) ** DISTANCE_EXPONENT
+            if h.max_sq_dist > 0 and sqdist > h.max_sq_dist:
+                sqdist *= (sqdist / h.max_sq_dist) ** DISTANCE_EXPONENT
 
-            rel *= h.demand
+            sqdist *= h.demand
 
-            self.energy += rel
+            self.energy += sqdist
 
         # penalise loads greater than mean/expectation load
         if self.load > self.exp_load:
@@ -114,11 +113,8 @@ class House:
         self.tap = tap
 
     def dist(self, other):
-        rel = self.pos - other.pos
-        rel = rel.real ** 2 + rel.imag ** 2
-        return math.sqrt(rel)
+        return math.sqrt(self.sqdist(other))
 
     def sqdist(self, other):
         rel = self.pos - other.pos
-        rel = rel.real ** 2 + rel.imag ** 2
-        return rel
+        return rel.real ** 2 + rel.imag ** 2
