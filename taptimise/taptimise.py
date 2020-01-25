@@ -329,7 +329,7 @@ def main():
             ax2 = ax.twinx()
 
             ax2.set_ylabel("Relative Energy")
-            ax2.semilogy(ind, smooth(data[::, 1]) ** 2, color="k")
+            ax2.plot(ind, smooth(data[::, 1]), color="k")
 
             fig.tight_layout()
 
@@ -429,15 +429,23 @@ def main():
         The final energy of the village was <b>{Decimal(energy):.2E}
         units </b>. A summery of the tap percentage loads is:
         {', '.join(str(tap[3]) for tap in taps)}. With a standard deviation of
-        <b>{round(statistics.pstdev(t[3] for t in taps))}</b>.</p>
+        <b>{round(statistics.pstdev(t[3] for t in taps),1)}</b>.</p>
 
     <h2>Village Map</h2>
 
     </div>
 
-    </div>
+
     <div class="center_svg">
     {map_svg}
+    </div>
+
+    <div class="center_txt">
+    <h2>Annealing Data</h2>
+    </div>
+
+    <div class="center_svg">
+    {''.join(debug_svg)}
     </div>
 
     <div class="center_txt">
@@ -445,13 +453,8 @@ def main():
     {to_html(['Latitude', 'Longitude', 'Number', 'Load %'], taps)}
     <h2>House Data</h2>
     {to_html(['Latitude', 'Longitude', 'Tap Number', 'Separation/m'], houses)}
-    <h2>Debug Visualisations</h2>
     </div>
 
-    </div>
-    <div class="center_svg">
-    {''.join(debug_svg)}
-    </div>
 
     </body>
     </html>"""
