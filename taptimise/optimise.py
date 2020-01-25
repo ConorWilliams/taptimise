@@ -39,9 +39,6 @@ def optimise(
     # finds optimal tap position for houses
     tot_demand = sum(h[2] for h in houses)
 
-    if overvolt is None:
-        overvolt = OVERVOALT_DEFAULT
-
     if num_taps is None:
         num_taps = int(math.ceil(tot_demand * 1.05 / max_load + 0.5))
     elif num_taps * max_load < tot_demand:
@@ -51,6 +48,9 @@ def optimise(
     print("Attempting to optimise", num_taps, "taps.")
 
     avg_frac_load = tot_demand / (num_taps * max_load)
+
+    if overvolt is None:
+        overvolt = max(OVERVOALT_DEFAULT, avg_frac_load * OVERVOALT_DEFAULT)
 
     if steps is None:
         steps = int(num_taps * STEP_MULTIPLYER)
