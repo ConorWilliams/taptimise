@@ -43,6 +43,6 @@ Setting a maximum separation with `-m` will trigger automatic reruns each using 
 
 Increasing the number of simulation steps with `-s` will improve the result at the expense of longer compute time.
 
-An effective 'auto' mode can be enabled by passing the flags `--steps 10 --scales 100`. This will cause taptimise to loop through its cooling stage until it detects a stationary state. This is useful if you don't know how many Monte-Carlo steps to use and you don't want to risk overestimating.
+An effective 'auto' mode can be enabled by passing the flags `--steps 50 --scales 20`. This will cause taptimise to loop through its cooling stage until it detects a stationary state. This is useful if you don't know how many Monte-Carlo steps to use and you don't want to risk overestimating.
 
 Setting the overload fraction with `-o` much less than 1.15 will cause non deterministic results.
