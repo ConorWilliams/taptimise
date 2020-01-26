@@ -89,14 +89,6 @@ def main():
     )
     group.add_argument(
         "-N",
-        "--optimise-for-n",
-        metavar="N",
-        action="store",
-        type=int,
-        help="Optimise the village for N taps.",
-    )
-    parser.add_argument(
-        "-n",
         "--num-taps",
         type=int,
         action="store",
@@ -139,14 +131,6 @@ def main():
         action="store",
         type=int,
         help="Set number of scales, leave blank for automatic detection.",
-    )
-    parser.add_argument(
-        "-o",
-        "--overload",
-        action="store",
-        type=float,
-        metavar="FRAC",
-        help="Set the overload threshold to enable quantum tunneling.",
     )
     parser.add_argument(
         "--csv", action="store_true", help="Write results to a .csv file."
@@ -196,14 +180,13 @@ def main():
                 except:
                     print("Can't read", row)
 
-    if args.optimise_for_n is not None:
-        args.num_taps = args.optimise_for_n
-        args.tap_capacity = 1.15 * sum(h[2] for h in raw_houses) / args.num_taps
-
     convert = LocalXY(*raw_houses[0][0:2])
 
     for h in raw_houses:
         h[0], h[1] = convert.geo2enu(h[0], h[1])
+
+    if args.tap_capacity is None:
+        args.tap_capacity = sum(h[2] for h in raw_houses) / args.num_taps
 
     max_dist = args.max_distance + 1
     num_taps = args.num_taps
@@ -218,7 +201,6 @@ def main():
             multiscale=args.scales,
             max_dist=args.max_distance,
             buff_size=args.buffer_size,
-            overvolt=args.overload,
             norelax=args.no_relax,
         )
         num_taps = len(taps) + 1
@@ -429,9 +411,10 @@ def main():
     <p> Taptimise placed <b>{len(taps)} taps</b>. The furthest tap-house separation was
         <b>{'{:g}'.format(float('{:.{p}g}'.format(max_dist, p=3)))} meters</b>.
         The final energy of the village was <b>{Decimal(energy):.2E}
-        units </b>. A summery of the tap percentage loads is:
-        {', '.join(str(tap[3]) for tap in taps)}. With a standard deviation of
-        <b>{round(statistics.pstdev(t[3] for t in taps),1)}</b>.
+        units </b>. A summery of the tap loads are:
+        {', '.join(str(tap[3]) for tap in taps)}. With a mean of
+        <b>{round(statistics.mean(t[3] for t in taps))} ± 
+        {round(statistics.pstdev(t[3] for t in taps))}</b>.
         </p>
 
     <h2>Village Map</h2>
@@ -453,7 +436,7 @@ def main():
 
     <div class="center_txt">
     <h2>Tap Data</h2>
-    {to_html(['Latitude', 'Longitude', 'Number', 'Load %'], taps)}
+    {to_html(['Latitude', 'Longitude', 'Number', 'Load'], taps)}
     <h2>House Data</h2>
     {to_html(['Latitude', 'Longitude', 'Tap Number', 'Separation/m'], houses)}
     </div>

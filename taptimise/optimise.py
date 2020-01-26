@@ -12,11 +12,8 @@ BUFFER_MULTIPLYER = 3
 STEP_MULTIPLYER = 100
 ZTC_MULTIPLYER = 1
 
-TEMPERATURE_MULTIPLYER = 1
-TELEPORT_MULTIPLYER = 1
 
 KB_AVERAGE_RUNS = 100
-OVERVOALT_DEFAULT = 1.2
 
 
 def print_through(val):
@@ -33,24 +30,19 @@ def optimise(
     multiscale=None,
     max_dist=-1,
     buff_size=None,
-    overvolt=None,
     norelax=False,
 ):
     # finds optimal tap position for houses
     tot_demand = sum(h[2] for h in houses)
 
     if num_taps is None:
-        num_taps = int(math.ceil(tot_demand * 1.05 / max_load + 0.5))
+        num_taps = int(math.ceil(tot_demand / max_load))
     elif num_taps * max_load < tot_demand:
-        print("ERROR - Not enough taps to support village")
-        exit()
+        print("WARNING - Not enough taps to support village")
 
     print("Attempting to optimise", num_taps, "taps.")
 
     avg_frac_load = tot_demand / (num_taps * max_load)
-
-    if overvolt is None:
-        overvolt = max(OVERVOALT_DEFAULT, avg_frac_load * OVERVOALT_DEFAULT)
 
     if steps is None:
         steps = int(num_taps * STEP_MULTIPLYER)
@@ -71,7 +63,7 @@ def optimise(
 
     # main object lists
     houses = [House(*h, buff_size, max_sq_dist) for h in houses]
-    taps = [Tap(max_load, max_load * avg_frac_load) for _ in range(num_taps)]
+    taps = [Tap(max_load * avg_frac_load) for _ in range(num_taps)]
 
     kB = 0
     # computes the expectation kB of a random (uncentalised) layout
@@ -91,14 +83,14 @@ def optimise(
     # main cooling
     debug_data = []
 
-    run_info = cool(houses, taps, steps, kB, overvolt, num_scales, debug=debug)
+    run_info = cool(houses, taps, steps, kB, num_scales, debug=debug)
     debug_data.append(run_info)
 
     # zero temp cooling
     print()
     print("Zero temperature & pair wise optimisations:")
 
-    run_info = cool(houses, taps, ztc_steps, -1, overvolt, 1, debug=debug)
+    run_info = cool(houses, taps, ztc_steps, -1, 1, debug=debug)
     debug_data.append(run_info)
 
     if not norelax:
@@ -110,8 +102,7 @@ def optimise(
     ]
 
     t_out = [
-        [t.pos.real, t.pos.imag, i, round(t.load / t.max_load * 100)]
-        for i, t in enumerate(taps)
+        [t.pos.real, t.pos.imag, i, round(t.load)] for i, t in enumerate(taps)
     ]
 
     max_dist = max(out[3] for out in h_out)
@@ -119,7 +110,7 @@ def optimise(
     return (h_out, t_out, max_dist, debug_data, sum(t.energy for t in taps))
 
 
-def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
+def cool(houses, taps, steps, kB, scales, debug=False):
     # performs a round of cooling to optimise tap positions
     energy = 0
     data = []
@@ -132,11 +123,10 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
     # one tap edge case
     if len(taps) <= 1:
         if debug:
-            data.append([TEMPERATURE_MULTIPLYER, energy, 0, 0, 0])
+            data.append([1, energy, 0, 0, 0])
 
         return data
 
-    prob = len(taps) / len(houses) * TELEPORT_MULTIPLYER
     base = 10 ** -(2 / steps)  # 1 > temp_end > 0.01
 
     num_taps = len(taps)
@@ -167,8 +157,8 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                         h = tuple(old_tap.houses)[j]
                         break
                     elif rand < 0.01:
-                        # Hacky O(1) fix for large emax issues
-                        emax = random.choice(taps).energy
+                        # Hacky fix for large emax issues
+                        emax = max(t.energy for t in taps)
 
                 # picks a new tap from buffer i.e more likely to be a near by tap
                 new_tap = h.buff.rand()
@@ -180,18 +170,14 @@ def cool(houses, taps, steps, kB, overvolt, scales, debug=False):
                     for _ in range(num_taps):
                         new_tap = taps[int(random.random() * num_taps)]
                         p = new_tap.energy / emax
-                        if (p <= 0) or (random.random() > p):
+                        if (
+                            p <= 0
+                            or random.random() > p
+                            or len(new_tap.houses) == 1
+                        ):
                             break
                     else:  # nobreak
                         new_tap = random.choice(taps)
-
-                if (  # quantum tunnel if tap is overloaded
-                    kB > 0
-                    and h.tap.load / h.tap.max_load > overvolt
-                    and random.random() < prob * (1 - i / steps)
-                ):
-                    energy += qtunnel(h, taps)
-                    continue
 
                 # move house to new tap
                 h.detach()
@@ -292,43 +278,6 @@ def relax(houses, taps):
                 swaps += swapped
 
     return swaps
-
-
-def qtunnel(h, taps):
-    # detaches h from tap and moves lowest scoring tap to h
-    # reattaches lowest scoring taps other houses
-    # clears buffers of all houses involved
-    min_tap = min(taps, key=lambda t: t.load)
-    old_tap = h.tap
-
-    other_houses = tuple(min_tap.houses)
-
-    for o in other_houses:
-        new = o.buff.data[o.buff.pos - 1]
-        count = 2
-        while new is min_tap:
-            if count > len(o.buff.data) - 1:
-                new = random.choice(taps)
-            else:
-                new = o.buff.data[o.buff.pos - count]
-                count += 1
-
-        o.detach()
-        o.attach(new)
-
-        o.buff.clear()
-        o.buff.insert(new)
-
-    h.detach()
-    h.attach(min_tap)
-
-    h.buff.clear()
-    h.buff.insert(min_tap)
-
-    old_tap.centralise()
-    min_tap.centralise()
-
-    return old_tap.score() + min_tap.score()
 
 
 def randomise(houses, taps):
