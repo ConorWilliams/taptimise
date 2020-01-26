@@ -3,7 +3,7 @@
 import math
 import random
 
-BASE = 100
+
 DISTANCE_EXPONENT = 2
 
 
@@ -34,6 +34,8 @@ class Buffer:
 
 
 class Tap:
+    BASE = 1  # Contols dist vs flattness
+
     def __init__(self, exp_load):
         self.pos = complex(0, 0)
         self.vec_sum = complex(0, 0)
@@ -68,7 +70,7 @@ class Tap:
 
             self.energy += sqdist * h.demand
 
-        self.energy *= BASE ** (
+        self.energy *= Tap.BASE ** (
             ((self.load - self.exp_load) / self.exp_load) ** 2
         )
 

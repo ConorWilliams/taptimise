@@ -31,7 +31,9 @@ def optimise(
     max_dist=-1,
     buff_size=None,
     norelax=False,
+    fair=None,
 ):
+    Tap.BASE = fair
     # finds optimal tap position for houses
     tot_demand = sum(h[2] for h in houses)
 
@@ -264,13 +266,8 @@ def relax(houses, taps):
     swaps = 0
     avg = int(len(houses) / len(taps))
 
-    tmp = sorted(houses, key=lambda x: houses[0].sqdist(x))
-
-    for h in tqdm(tmp, ascii=True):
-        houses.sort(key=lambda x: h.sqdist(x))
-        near = houses[1 : avg + 1]
-
-        for o in near:
+    for h in tqdm(houses, ascii=True):
+        for o in houses:
             delta_E, swapped = swap(h, o)
             if delta_E > 0:
                 swap(h, o)

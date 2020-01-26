@@ -113,6 +113,15 @@ def main():
         metavar="SIZE",
     )
     parser.add_argument(
+        "-f",
+        "--fairness",
+        type=int,
+        action="store",
+        default=50,
+        help="Higher equals flatter load distibution but longer walking distances. On interval 1-1000000.",
+        metavar="FAIR",
+    )
+    parser.add_argument(
         "-s",
         "--steps",
         action="store",
@@ -202,6 +211,7 @@ def main():
             max_dist=args.max_distance,
             buff_size=args.buffer_size,
             norelax=args.no_relax,
+            fair=args.fairness,
         )
         num_taps = len(taps) + 1
 
@@ -413,7 +423,7 @@ def main():
         The final energy of the village was <b>{Decimal(energy):.2E}
         units </b>. A summery of the tap loads are:
         {', '.join(str(tap[3]) for tap in taps)}. With a mean of
-        <b>{round(statistics.mean(t[3] for t in taps))} ± 
+        <b>{round(statistics.mean(t[3] for t in taps))} ±
         {round(statistics.pstdev(t[3] for t in taps))}</b>.
         </p>
 
