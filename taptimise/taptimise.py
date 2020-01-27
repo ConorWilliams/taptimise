@@ -10,9 +10,11 @@ import sys
 import statistics
 from decimal import Decimal
 
+import simplekml
 import numpy as np
 from pyfiglet import Figlet
 from matplotlib import pyplot as plt
+
 
 from .__init__ import __version__
 from .optimise import optimise
@@ -143,6 +145,9 @@ def main():
     )
     parser.add_argument(
         "--csv", action="store_true", help="Write results to a .csv file."
+    )
+    parser.add_argument(
+        "--kml", action="store_true", help="Write results to a .kml file."
     )
     parser.add_argument(
         "--no-relax",
@@ -350,9 +355,18 @@ def main():
 
     if args.csv:
         with open(f"{path[:-4]}_taps.csv", "w") as f:
-            print("Lat,Lon,Load%", file=f)
             for t in taps:
-                print(f"{round(t[0], 5)},{round(t[1], 5)},{t[3]}", file=f)
+                print(f"{round(t[0], 5)},{round(t[1], 5)}", file=f)
+
+    if args.kml:
+        kml = simplekml.Kml()
+        for t in taps:
+            kml.newpoint(name="Tap", coords=[(t[1], t[0])])
+
+        for h in houses:
+            kml.newpoint(name="House", coords=[(h[1], h[0])])
+
+        kml.save(f"{path[:-4]}_taps.kml")
 
     percentage = 50
     raw_html = f"""
