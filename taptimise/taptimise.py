@@ -361,6 +361,7 @@ def main():
     if args.kml:
         kml = simplekml.Kml()
         for t in taps:
+            # long, lat for simplekml!
             kml.newpoint(name="Tap", coords=[(t[1], t[0])])
 
         for h in houses:

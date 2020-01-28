@@ -62,7 +62,7 @@ class Tap:
 
         # sums all bond-energies
         for h in self.houses:
-            sqdist = h.sqdist(self)
+            sqdist = h.dist(self)
 
             # penalise bonds longer than max walking distance
             if h.max_sq_dist > 0 and sqdist > h.max_sq_dist:
